@@ -9,26 +9,54 @@ const Register = () => {
     const [otp, setOtp] = useState('');
     const [showOTP, setShowOTP] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { register, verifyOTP } = useContext(AuthContext);
+    const { register, verifyOTP, resendOTP } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setSuccess('');
         try {
             if (!showOTP) {
-                await register(name, email, password);
+                const data = await register(name, email, password);
                 setShowOTP(true);
-                setError('');
+                setSuccess(data.message || 'OTP sent! Check your email (or server console).');
             } else {
                 await verifyOTP(email, otp);
                 navigate('/dashboard');
             }
         } catch (err) {
-            setError(err);
+            // Handle both string errors and object errors
+            if (typeof err === 'string') {
+                setError(err);
+            } else if (err?.message) {
+                setError(err.message);
+            } else {
+                setError('Something went wrong. Please try again.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOTP = async () => {
+        setLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            const data = await resendOTP(email);
+            setSuccess(data.message || 'A new OTP has been sent!');
+            setOtp(''); // Clear old OTP input
+        } catch (err) {
+            if (typeof err === 'string') {
+                setError(err);
+            } else {
+                setError(err?.message || 'Failed to resend OTP');
+            }
         } finally {
             setLoading(false);
         }
@@ -42,6 +70,7 @@ const Register = () => {
             </div>
 
             {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-center shadow-inner border border-red-100">{error}</div>}
+            {success && <div className="bg-green-50 text-green-700 p-3 rounded-lg mb-6 text-center shadow-inner border border-green-100">{success}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 {!showOTP ? (
@@ -80,7 +109,7 @@ const Register = () => {
                 ) : (
                     <div>
                         <p className="text-sm text-green-700 bg-green-50 p-3 mb-4 rounded border border-green-200">
-                            An OTP has been sent to your email. Please verify your account.
+                            An OTP has been sent to <strong>{email}</strong>. Please enter it below to verify your account.
                         </p>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Verification Code (OTP)</label>
                         <input
@@ -103,6 +132,18 @@ const Register = () => {
                     {loading ? 'Processing...' : (showOTP ? 'Verify & Complete' : 'Sign Up')}
                 </button>
             </form>
+
+            {showOTP && (
+                <div className="text-center mt-4">
+                    <button
+                        onClick={handleResendOTP}
+                        disabled={loading}
+                        className="text-gray-600 hover:text-gray-900 text-sm font-semibold underline transition"
+                    >
+                        Didn't receive the code? Resend OTP
+                    </button>
+                </div>
+            )}
 
             {!showOTP && (
                 <p className="text-center mt-6 text-gray-600">

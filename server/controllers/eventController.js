@@ -26,20 +26,36 @@ exports.getEventById = async (req, res) => {
 exports.createEvent = async (req, res) => {
     try {
         const { title, description, date, location, category, totalSeats, ticketPrice, image } = req.body;
+
+        // Validate required fields
+        if (!title || !description || !date || !location || !category || !totalSeats) {
+            return res.status(400).json({ message: 'Please provide all required fields: title, description, date, location, category, totalSeats' });
+        }
+
+        const parsedSeats = parseInt(totalSeats);
+        const parsedPrice = parseFloat(ticketPrice) || 0;
+
+        if (isNaN(parsedSeats) || parsedSeats <= 0) {
+            return res.status(400).json({ message: 'Total seats must be a positive number' });
+        }
+
         const event = await Event.create({
             title,
             description,
-            date,
+            date: new Date(date),
             location,
             category,
-            totalSeats,
-            availableSeats: totalSeats,
-            ticketPrice: ticketPrice || 0,
+            totalSeats: parsedSeats,
+            availableSeats: parsedSeats,
+            ticketPrice: parsedPrice,
             image: image || '',
             createdBy: req.user.id
         });
+
+        console.log('✅ Event created:', event.title);
         res.status(201).json(event);
     } catch (error) {
+        console.error('❌ Error creating event:', error.message);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };

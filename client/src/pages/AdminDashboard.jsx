@@ -41,11 +41,17 @@ const AdminDashboard = () => {
     const handleCreateEvent = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/events', formData);
+            const payload = {
+                ...formData,
+                totalSeats: Number(formData.totalSeats),
+                ticketPrice: Number(formData.ticketPrice) || 0
+            };
+            await api.post('/events', payload);
             setShowEventForm(false);
             setFormData({ title: '', description: '', date: '', location: '', category: '', totalSeats: '', ticketPrice: '', image: '' });
             fetchData();
         } catch (error) {
+            console.error('Event creation error:', error.response?.data || error.message);
             alert(error.response?.data?.message || 'Error creating event');
         }
     };

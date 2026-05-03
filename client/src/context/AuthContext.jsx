@@ -23,6 +23,9 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', data.token);
             return data;
         } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server. Make sure the backend is running on port 5000.';
+            }
             if (error.response?.data?.needsVerification) throw error.response.data;
             throw error.response?.data?.message || 'Login failed';
         }
@@ -33,6 +36,9 @@ export const AuthProvider = ({ children }) => {
             const { data } = await api.post('/auth/register', { name, email, password });
             return data; // Returns { message, email }
         } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server. Make sure the backend is running on port 5000.';
+            }
             throw error.response?.data?.message || 'Registration failed';
         }
     };
@@ -45,7 +51,22 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', data.token);
             return data;
         } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server. Make sure the backend is running on port 5000.';
+            }
             throw error.response?.data?.message || 'OTP verification failed';
+        }
+    };
+
+    const resendOTP = async (email) => {
+        try {
+            const { data } = await api.post('/auth/resend-otp', { email });
+            return data;
+        } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server.';
+            }
+            throw error.response?.data?.message || 'Failed to resend OTP';
         }
     };
 
@@ -56,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, verifyOTP, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, verifyOTP, resendOTP, logout, loading }}>
             {!loading && children}
         </AuthContext.Provider>
     );
