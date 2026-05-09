@@ -23,25 +23,47 @@ app.use('/api/bookings', bookingRoutes);
 
 // Database Connection
 const connectDB = async () => {
+  const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/eventora';
+
+  // Use in-memory DB only if explicitly set in .env (USE_MEMORY_DB=true)
+  if (process.env.USE_MEMORY_DB === 'true') {
+    return await startInMemoryDB();
+  }
+
+  // Try connecting to Atlas / remote MongoDB
+  console.log('Connecting to MongoDB...');
   try {
-    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/eventora';
-    await mongoose.connect(uri);
-    console.log('MongoDB Connected (Remote/Local)');
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 30000,
+    });
+    console.log('✅ MongoDB Connected (Atlas)');
   } catch (err) {
-    console.error('Primary MongoDB Connection Error:', err.message);
-    console.log('Attempting to start local in-memory MongoDB Server as fallback...');
-    try {
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      const seedDatabase = require('./seed');
-      const mongoServer = await MongoMemoryServer.create();
-      const memoryUri = mongoServer.getUri();
-      await mongoose.connect(memoryUri);
-      console.log('MongoDB Connected (In-Memory Fallback)');
-      console.log('Populating in-memory database with initial data...');
-      await seedDatabase(mongoose);
-    } catch (memErr) {
-      console.error('In-Memory MongoDB Connection Error:', memErr.message);
-    }
+    console.error('⚠️  MongoDB Atlas Connection Failed:', err.message);
+    console.log('');
+    console.log('   Your network may be blocking Atlas DNS queries.');
+    console.log('   Falling back to local in-memory database with demo data...');
+    console.log('');
+    await startInMemoryDB();
+  }
+};
+
+const startInMemoryDB = async () => {
+  try {
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    const seedDatabase = require('./seed');
+    const mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+    console.log('✅ MongoDB Connected (In-Memory)');
+    await seedDatabase(mongoose);
+    console.log('');
+    console.log('   ⚡ Using in-memory database — data will reset on server restart');
+    console.log('   📌 To use Atlas: fix your network/IP whitelist and restart');
+    console.log('');
+  } catch (memErr) {
+    console.error('❌ In-Memory MongoDB Error:', memErr.message);
+    process.exit(1);
   }
 };
 
