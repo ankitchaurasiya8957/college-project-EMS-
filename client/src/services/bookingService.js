@@ -51,6 +51,22 @@ const bookingService = {
         const { data } = await api.post('/bookings', { eventId, otp });
         return data;
     },
+
+    /**
+     * Get participants for a specific event (admin-only).
+     */
+    getEventParticipants: async (eventId) => {
+        const { data } = await api.get(`/bookings/event/${eventId}/participants`);
+        return data;
+    },
+
+    /**
+     * Get booking analytics (admin-only).
+     */
+    getAnalytics: async () => {
+        const { data } = await api.get('/bookings/analytics');
+        return data;
+    },
 };
 
 export default bookingService;

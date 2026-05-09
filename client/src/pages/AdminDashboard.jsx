@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import eventService from '../services/eventService';
 import bookingService from '../services/bookingService';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award, CreditCard, Eye, ArrowLeft, Ticket } from 'lucide-react';
 import { CategoryPieChart, MonthlyBarChart, RevenueLineChart } from '../components/DashboardCharts';
 import EditEventModal from '../components/EditEventModal';
 import './AdminDashboard.css';
@@ -34,6 +34,11 @@ const AdminDashboard = () => {
   const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({ title: '', description: '', date: '', location: '', category: '', totalSeats: '', ticketPrice: '', image: '' });
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [participants, setParticipants] = useState(null);
+  const [participantSearch, setParticipantSearch] = useState('');
+  const [participantFilter, setParticipantFilter] = useState('all');
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
 
   useEffect(() => { if (!user || user.role !== 'admin') { navigate('/login'); return; } fetchData(); }, [user, navigate]);
 
@@ -121,6 +126,32 @@ const AdminDashboard = () => {
 
   const categories = useMemo(() => [...new Set(events.map(e => e.category))], [events]);
 
+  const handleViewParticipants = async (eventId) => {
+    setSelectedEventId(eventId);
+    setLoadingParticipants(true);
+    setActiveTab('participants');
+    try {
+      const data = await bookingService.getEventParticipants(eventId);
+      setParticipants(data);
+    } catch (error) {
+      showToast('Failed to load participants', 'error');
+      console.error(error);
+    } finally {
+      setLoadingParticipants(false);
+    }
+  };
+
+  const filteredParticipants = useMemo(() => {
+    if (!participants?.participants) return [];
+    let list = participants.participants;
+    if (participantSearch) {
+      const q = participantSearch.toLowerCase();
+      list = list.filter(p => p.user?.name?.toLowerCase().includes(q) || p.user?.email?.toLowerCase().includes(q) || p.bookingId?.toLowerCase().includes(q) || p.transactionId?.toLowerCase().includes(q));
+    }
+    if (participantFilter !== 'all') list = list.filter(p => p.status === participantFilter);
+    return list;
+  }, [participants, participantSearch, participantFilter]);
+
   const filteredEvents = useMemo(() => {
     let filtered = events;
     if (searchQuery) {
@@ -157,6 +188,7 @@ const AdminDashboard = () => {
     { id: 'overview', label: 'Overview', icon: <BarChart3 size={15} /> },
     { id: 'events', label: 'All Events', icon: <Calendar size={15} /> },
     { id: 'bookings', label: 'Bookings', icon: <Users size={15} /> },
+    ...(selectedEventId ? [{ id: 'participants', label: 'Participants', icon: <Ticket size={15} /> }] : []),
   ];
 
   return (
@@ -236,6 +268,7 @@ const AdminDashboard = () => {
                           <td className="text-black/60 text-sm">{event.createdBy?.name || '—'}</td>
                           <td>
                             <div className="flex items-center gap-2">
+                              <button className="action-btn" title="Participants" onClick={() => handleViewParticipants(event._id)} style={{color:'#6366f1'}}><Eye size={14} /></button>
                               <button className="action-btn edit" title="Edit" onClick={() => setEditEvent(event)}><Edit3 size={14} /></button>
                               <button className="action-btn delete" title="Delete" onClick={() => handleDeleteEvent(event._id)}><Trash2 size={14} /></button>
                             </div>
@@ -285,9 +318,12 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                     <div className="bg-black/[0.02] rounded-xl p-3 mb-3 text-sm space-y-1">
-                      <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-16 inline-block">User:</span><span className="font-medium text-dark">{booking.userId?.name}</span><span className="text-black/30 ml-1">({booking.userId?.email})</span></p>
-                      <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-16 inline-block">Amount:</span><span className={`font-medium ${booking.amount === 0 ? 'text-emerald-500' : 'text-dark'}`}>{booking.amount === 0 ? 'Free' : `₹${booking.amount}`}</span></p>
-                      <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-16 inline-block">Date:</span>{new Date(booking.bookedAt).toLocaleString()}</p>
+                      <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">User:</span><span className="font-medium text-dark">{booking.userId?.name}</span><span className="text-black/30 ml-1">({booking.userId?.email})</span></p>
+                      <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">Amount:</span><span className={`font-medium ${booking.amount === 0 ? 'text-emerald-500' : 'text-dark'}`}>{booking.amount === 0 ? 'Free' : `₹${booking.amount}`}</span></p>
+                      {booking.bookingId && <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">Booking:</span><span className="font-mono font-bold text-dark text-xs">{booking.bookingId}</span></p>}
+                      {booking.transactionId && <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">Txn ID:</span><span className="font-mono text-dark text-xs">{booking.transactionId}</span></p>}
+                      {booking.paymentMethod && <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">Method:</span><span className="font-medium text-dark uppercase text-xs">{booking.paymentMethod}</span></p>}
+                      <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">Date:</span>{new Date(booking.bookedAt).toLocaleString()}</p>
                     </div>
                     {booking.status === 'pending' && (
                       <div className="flex flex-wrap gap-2 mt-3">
@@ -300,6 +336,61 @@ const AdminDashboard = () => {
                 ))}
               </ul>
             </div>
+          </div>
+        )}
+
+        {/* TAB: Participants */}
+        {activeTab === 'participants' && (
+          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+            <button onClick={() => { setActiveTab('events'); setSelectedEventId(null); setParticipants(null); }} className="flex items-center gap-2 text-sm text-black/50 hover:text-primary transition-colors mb-6">
+              <ArrowLeft size={16} /> Back to Events
+            </button>
+            {loadingParticipants ? (
+              <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+            ) : participants ? (
+              <>
+                {/* Event Summary */}
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white mb-6">
+                  <h3 className="font-heading text-xl font-semibold mb-1">{participants.event.title}</h3>
+                  <div className="flex flex-wrap gap-4 text-sm opacity-80 mt-2">
+                    <span>📅 {new Date(participants.event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span>📍 {participants.event.location}</span>
+                    <span>🏷️ {participants.event.category}</span>
+                    <span>💺 {participants.event.availableSeats}/{participants.event.totalSeats} seats</span>
+                  </div>
+                  <div className="flex gap-6 mt-4">
+                    <div><p className="text-2xl font-bold">{participants.totalParticipants}</p><p className="text-xs opacity-70">Confirmed</p></div>
+                    <div><p className="text-2xl font-bold">{participants.pendingCount}</p><p className="text-xs opacity-70">Pending</p></div>
+                    <div><p className="text-2xl font-bold">{participants.participants.length}</p><p className="text-xs opacity-70">Total</p></div>
+                  </div>
+                </div>
+                {/* Search & Filter */}
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 mb-6">
+                  <div className="search-bar flex-1"><Search size={16} className="text-black/30 shrink-0" /><input placeholder="Search by name, email, booking ID, transaction ID..." value={participantSearch} onChange={e => setParticipantSearch(e.target.value)} /></div>
+                  <select className="filter-select" value={participantFilter} onChange={e => setParticipantFilter(e.target.value)}><option value="all">All Status</option><option value="confirmed">Confirmed</option><option value="pending">Pending</option></select>
+                </div>
+                {/* Participants Table */}
+                <div className="bg-white rounded-2xl border border-black/6 overflow-hidden">
+                  <div className="table-wrapper"><table className="events-table"><thead><tr><th>User</th><th>Email</th><th>Booking ID</th><th>Type</th><th>Status</th><th>Payment</th><th>Transaction ID</th><th>Amount</th><th>Booked On</th></tr></thead><tbody>
+                    {filteredParticipants.length === 0 ? (
+                      <tr><td colSpan="9" className="text-center text-black/30 py-12">No participants found.</td></tr>
+                    ) : filteredParticipants.map((p, i) => (
+                      <tr key={i}>
+                        <td><span className="font-semibold text-dark">{p.user?.name || '—'}</span></td>
+                        <td className="text-black/60 text-xs">{p.user?.email || '—'}</td>
+                        <td><span className="font-mono text-xs font-bold text-dark">{p.bookingId || '—'}</span></td>
+                        <td><span className="px-2 py-0.5 rounded-lg bg-black/5 text-xs font-medium capitalize">{p.bookingType}</span></td>
+                        <td><span className={`status-badge status-${p.status === 'confirmed' ? 'upcoming' : 'completed'}`}>{p.status}</span></td>
+                        <td><span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${p.paymentStatus === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{p.paymentStatus?.replace('_',' ')}</span></td>
+                        <td><span className="font-mono text-xs text-black/60">{p.transactionId || '—'}</span></td>
+                        <td className="font-medium">{p.amount === 0 ? <span className="text-emerald-500">Free</span> : `₹${p.amount}`}</td>
+                        <td className="text-black/60 text-xs">{new Date(p.bookedAt).toLocaleDateString('en-IN')}</td>
+                      </tr>
+                    ))}
+                  </tbody></table></div>
+                </div>
+              </>
+            ) : <p className="text-black/40 text-center py-12">Select an event to view participants.</p>}
           </div>
         )}
 

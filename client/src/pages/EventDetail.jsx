@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import eventService from '../services/eventService';
-import bookingService from '../services/bookingService';
 import { AuthContext } from '../context/AuthContext';
-import { ArrowLeft, ArrowRight, Calendar, MapPin, Users, Ticket, Sparkles, Share2, Heart } from 'lucide-react';
+import PaymentModal from '../components/PaymentModal';
+import { ArrowLeft, ArrowRight, Calendar, MapPin, Users, Ticket, Sparkles, Share2, Heart, CreditCard, Zap, Shield, Clock } from 'lucide-react';
 
 const EventDetail = () => {
     const { id } = useParams();
@@ -11,11 +11,9 @@ const EventDetail = () => {
     const { user } = useContext(AuthContext);
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [bookingLoading, setBookingLoading] = useState(false);
-    const [otp, setOtp] = useState('');
-    const [showOTP, setShowOTP] = useState(false);
     const [error, setError] = useState('');
-    const [successMsg, setSuccessMsg] = useState('');
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [bookingType, setBookingType] = useState('booking');
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -31,31 +29,18 @@ const EventDetail = () => {
         fetchEvent();
     }, [id]);
 
-    const handleBooking = async () => {
+    const handleBookAction = (type) => {
         if (!user) {
             navigate('/login');
             return;
         }
-        setBookingLoading(true);
-        setError('');
-        setSuccessMsg('');
+        setBookingType(type);
+        setShowPaymentModal(true);
+    };
 
-        try {
-            if (!showOTP) {
-                await bookingService.sendOTP();
-                setShowOTP(true);
-                setSuccessMsg('OTP sent to your email. Please verify to confirm booking.');
-            } else {
-                await bookingService.book(event._id, otp);
-                setSuccessMsg('Booking requested! Awaiting admin confirmation.');
-                setShowOTP(false);
-                setEvent({ ...event, availableSeats: event.availableSeats - 1 });
-            }
-        } catch (err) {
-            setError(err.response?.data?.message || 'Booking failed');
-        } finally {
-            setBookingLoading(false);
-        }
+    const handlePaymentSuccess = (booking) => {
+        // Re-fetch event to update seat count
+        eventService.getById(id).then(data => setEvent(data)).catch(() => {});
     };
 
     if (loading) return (
@@ -70,11 +55,13 @@ const EventDetail = () => {
     );
 
     const isSoldOut = event.availableSeats <= 0;
+    const isFree = event.ticketPrice === 0;
+    const seatsPercent = (event.availableSeats / event.totalSeats) * 100;
 
     const features = [
-      { title: 'OTP Verified', desc: 'Your booking is secured with two-factor OTP verification.' },
-      { title: 'Admin Confirmed', desc: 'Each booking is reviewed and confirmed by the organizer.' },
-      { title: 'Instant Updates', desc: 'Get real-time booking status updates on your dashboard.' },
+      { icon: Shield, title: 'Secure Payment', desc: 'Payments processed via Razorpay with bank-grade encryption.' },
+      { icon: Zap, title: 'Instant Confirmation', desc: 'Get immediate booking confirmation after successful payment.' },
+      { icon: Clock, title: 'Real-time Updates', desc: 'Track your booking status live from your dashboard.' },
     ];
 
     return (
@@ -144,7 +131,7 @@ const EventDetail = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Ticket size={20} className="text-primary" />
-                    <span className="text-sm font-medium">{event.ticketPrice === 0 ? 'Free Entry' : `₹${event.ticketPrice}`}</span>
+                    <span className="text-sm font-medium">{isFree ? 'Free Entry' : `₹${event.ticketPrice}`}</span>
                   </div>
                 </div>
 
@@ -154,7 +141,7 @@ const EventDetail = () => {
                   <p className="text-black/50 leading-relaxed">{event.description}</p>
                   <p className="text-black/50 leading-relaxed mt-4">
                     Join us for an incredible experience! This event offers a unique opportunity to connect, learn, and celebrate.
-                    Secure your spot today with our OTP-verified booking system and get your booking confirmed by the organizer.
+                    Secure your spot today with our secure payment system and get instant booking confirmation.
                   </p>
                 </div>
 
@@ -165,7 +152,7 @@ const EventDetail = () => {
                     {features.map((feature, i) => (
                       <div key={i} className="p-6 rounded-2xl border border-black/10 hover:border-primary/20 hover:shadow-sm transition-all">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                          <Sparkles size={18} className="text-primary" />
+                          <feature.icon size={18} className="text-primary" />
                         </div>
                         <h4 className="font-medium text-dark mb-2">{feature.title}</h4>
                         <p className="text-sm text-black/50">{feature.desc}</p>
@@ -180,7 +167,7 @@ const EventDetail = () => {
                 <div className="sticky top-28 bg-white rounded-2xl border border-black/10 p-8">
                   <div className="mb-6">
                     <p className="text-3xl font-heading font-semibold text-dark">
-                      {event.ticketPrice === 0 ? <span className="text-emerald-500">Free</span> : `₹${event.ticketPrice}`}
+                      {isFree ? <span className="text-emerald-500">Free</span> : `₹${event.ticketPrice}`}
                     </p>
                     <p className="text-sm text-black/50 mt-1">Ticket price</p>
                   </div>
@@ -189,48 +176,60 @@ const EventDetail = () => {
                   <div className="mb-6">
                     <div className="w-full bg-black/5 rounded-full h-2 mb-2">
                       <div
-                        className="bg-primary h-2 rounded-full transition-all"
-                        style={{ width: `${(event.availableSeats / event.totalSeats) * 100}%` }}
+                        className={`h-2 rounded-full transition-all ${seatsPercent > 30 ? 'bg-primary' : seatsPercent > 10 ? 'bg-amber-500' : 'bg-red-500'}`}
+                        style={{ width: `${seatsPercent}%` }}
                       />
                     </div>
                     <p className="text-xs text-black/50">
                       {event.availableSeats} of {event.totalSeats} seats remaining
+                      {seatsPercent <= 20 && event.availableSeats > 0 && (
+                        <span className="text-red-500 font-medium ml-1">— Filling fast!</span>
+                      )}
                     </p>
                   </div>
 
-                  {/* OTP Input */}
-                  {showOTP && (
-                    <div className="mb-4">
-                      <label className="text-sm font-medium text-dark block mb-2">Enter OTP to Confirm</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="6-digit code"
-                        className="w-full px-4 py-3.5 rounded-xl border border-black/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold tracking-widest text-center text-lg"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        maxLength="6"
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    {/* Book Now Button */}
                     <button
-                      onClick={handleBooking}
-                      disabled={isSoldOut || bookingLoading || (showOTP && !otp)}
-                      className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm transition-all ${
-                        isSoldOut || (successMsg && !showOTP)
+                      onClick={() => handleBookAction('booking')}
+                      disabled={isSoldOut}
+                      className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-full font-semibold text-sm transition-all ${
+                        isSoldOut
                           ? 'bg-black/10 text-black/40 cursor-not-allowed'
-                          : 'bg-primary text-white hover:bg-primary/90'
+                          : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/25'
                       }`}
                     >
-                      <Ticket size={16} />
-                      {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Confirm' : (successMsg && !showOTP ? 'Request Sent ✓' : (isSoldOut ? 'Sold Out' : 'Book Now')))}
+                      {isSoldOut ? (
+                        <>Sold Out</>
+                      ) : (
+                        <>{isFree ? <Zap size={16} /> : <CreditCard size={16} />} {isFree ? 'Register Free' : `Book Now — ₹${event.ticketPrice}`}</>
+                      )}
                     </button>
+
+                    {/* Participate Button */}
+                    {!isSoldOut && (
+                      <button
+                        onClick={() => handleBookAction('participation')}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm transition-all border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                      >
+                        <Sparkles size={16} /> Participate
+                      </button>
+                    )}
                   </div>
 
-                  {error && <p className="text-red-500 mt-4 text-center text-sm font-medium bg-red-50 p-3 rounded-xl">{error}</p>}
-                  {successMsg && <p className="text-emerald-600 mt-4 text-center text-sm font-medium bg-emerald-50 p-3 rounded-xl">{successMsg}</p>}
+                  {/* Payment methods */}
+                  {!isFree && !isSoldOut && (
+                    <div className="mt-4 flex items-center justify-center gap-3 text-[10px] text-black/30 font-medium uppercase tracking-wider">
+                      <span>UPI</span>
+                      <span className="w-px h-3 bg-black/10" />
+                      <span>Cards</span>
+                      <span className="w-px h-3 bg-black/10" />
+                      <span>NetBanking</span>
+                      <span className="w-px h-3 bg-black/10" />
+                      <span>Wallet</span>
+                    </div>
+                  )}
 
                   {/* Organizer Info */}
                   <div className="mt-8 pt-6 border-t border-black/10">
@@ -249,6 +248,17 @@ const EventDetail = () => {
               </div>
             </div>
           </section>
+
+          {/* Payment Modal */}
+          {showPaymentModal && (
+            <PaymentModal
+              event={event}
+              user={user}
+              bookingType={bookingType}
+              onClose={() => setShowPaymentModal(false)}
+              onSuccess={handlePaymentSuccess}
+            />
+          )}
         </div>
     );
 };
