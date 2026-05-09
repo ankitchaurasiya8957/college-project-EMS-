@@ -70,6 +70,42 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const forgotPassword = async (email) => {
+        try {
+            const { data } = await api.post('/auth/forgot-password', { email });
+            return data;
+        } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server.';
+            }
+            throw error.response?.data?.message || 'Failed to send reset OTP';
+        }
+    };
+
+    const verifyResetOTP = async (email, otp) => {
+        try {
+            const { data } = await api.post('/auth/verify-reset-otp', { email, otp });
+            return data; // Returns { message, resetToken }
+        } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server.';
+            }
+            throw error.response?.data?.message || 'OTP verification failed';
+        }
+    };
+
+    const resetPassword = async (resetToken, newPassword) => {
+        try {
+            const { data } = await api.post('/auth/reset-password', { resetToken, newPassword });
+            return data;
+        } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server.';
+            }
+            throw error.response?.data?.message || 'Password reset failed';
+        }
+    };
+
     const logout = () => {
         setUser(null);
         localStorage.removeItem('userInfo');
@@ -77,7 +113,18 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, verifyOTP, resendOTP, logout, loading }}>
+        <AuthContext.Provider value={{
+            user,
+            login,
+            register,
+            verifyOTP,
+            resendOTP,
+            forgotPassword,
+            verifyResetOTP,
+            resetPassword,
+            logout,
+            loading
+        }}>
             {!loading && children}
         </AuthContext.Provider>
     );

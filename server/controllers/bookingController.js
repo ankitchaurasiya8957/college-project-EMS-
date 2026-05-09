@@ -4,12 +4,14 @@ const OTP = require('../models/OTP');
 const { sendBookingEmail, sendOTPEmail } = require('../utils/email');
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+const OTP_EXPIRY_MINUTES = 10;
 
 exports.sendBookingOTP = async (req, res) => {
     try {
         const otp = generateOTP();
         await OTP.findOneAndDelete({ email: req.user.email, action: 'event_booking' });
-        await OTP.create({ email: req.user.email, otp, action: 'event_booking' });
+        const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+        await OTP.create({ email: req.user.email, otp, action: 'event_booking', expiresAt });
         await sendOTPEmail(req.user.email, otp, 'event_booking');
         res.json({ message: 'OTP sent successfully' });
     } catch (error) {
@@ -23,7 +25,8 @@ exports.bookEvent = async (req, res) => {
 
         // Verify OTP explicitly before proceeding
         const validOTP = await OTP.findOne({ email: req.user.email, otp, action: 'event_booking' });
-        if (!validOTP) {
+        if (!validOTP || new Date() > validOTP.expiresAt) {
+            if (validOTP) await OTP.deleteOne({ _id: validOTP._id });
             return res.status(400).json({ message: 'Invalid or expired OTP for booking' });
         }
 

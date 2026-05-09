@@ -1,4 +1,4 @@
-// Eventora Server - Event Management System
+// Eventora Server - Event Management System (v1.1)
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -64,11 +64,14 @@ const startServer = (port) => {
   // Graceful shutdown on Ctrl+C
   process.on('SIGINT', () => {
     console.log('\n🛑 Shutting down server gracefully...');
-    server.close(() => {
-      mongoose.connection.close(false, () => {
+    server.close(async () => {
+      try {
+        await mongoose.connection.close();
         console.log('MongoDB connection closed.');
-        process.exit(0);
-      });
+      } catch (e) {
+        console.error('Error closing MongoDB:', e.message);
+      }
+      process.exit(0);
     });
   });
 };

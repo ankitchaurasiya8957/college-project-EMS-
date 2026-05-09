@@ -9,7 +9,8 @@ const isEmailConfigured = () => {
         process.env.EMAIL_PASS &&
         process.env.EMAIL_USER !== '@gmail.com' &&
         process.env.EMAIL_USER !== 'your_email@gmail.com' &&
-        process.env.EMAIL_PASS !== 'your_app_password';
+        process.env.EMAIL_PASS !== 'your_app_password' &&
+        process.env.EMAIL_PASS !== 'your_email_app_password_here';
 };
 
 let transporter = null;
@@ -19,11 +20,17 @@ if (isEmailConfigured()) {
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
-        }
+        },
+        connectionTimeout: 5000,  // 5 second connection timeout
+        greetingTimeout: 5000,    // 5 second greeting timeout
+        socketTimeout: 5000,      // 5 second socket timeout
+        pool: true,               // Use pooled connections for speed
+        maxConnections: 3,
     });
     console.log('📧 Email transporter configured for:', process.env.EMAIL_USER);
 } else {
     console.warn('⚠️  Email not configured. OTPs will be logged to console instead of emailed.');
+    console.warn('   EMAIL_USER:', process.env.EMAIL_USER || '(not set)');
 }
 
 const sendBookingEmail = async (userEmail, userName, eventTitle) => {
@@ -46,7 +53,7 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
         console.log('✅ Email sent successfully to', userEmail);
     } catch (error) {
         console.error('❌ Error sending booking email:', error.message);
-        throw new Error('Failed to send booking email');
+        // Don't throw — let the booking proceed even if email fails
     }
 };
 
@@ -62,10 +69,18 @@ const sendOTPEmail = async (userEmail, otp, type) => {
         return; // Don't throw — OTP is available in console
     }
 
-    const title = type === 'account_verification' ? 'Verify your Eventora Account' : 'Eventora Booking Verification';
-    const msg = type === 'account_verification'
-        ? 'Please use the following OTP to verify your new Eventora account.'
-        : 'Please use the following OTP to verify and confirm your event booking.';
+    const titles = {
+        account_verification: 'Verify your Eventora Account',
+        event_booking: 'Eventora Booking Verification',
+        password_reset: 'Reset your Eventora Password'
+    };
+    const msgs = {
+        account_verification: 'Please use the following OTP to verify your new Eventora account.',
+        event_booking: 'Please use the following OTP to verify and confirm your event booking.',
+        password_reset: 'Please use the following OTP to reset your password. If you did not request this, you can safely ignore this email.'
+    };
+    const title = titles[type] || 'Eventora Verification';
+    const msg = msgs[type] || 'Please use the following OTP to complete your request.';
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -78,7 +93,7 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 <div style="margin: 20px auto; padding: 15px; font-size: 24px; font-weight: bold; background: #f4f4f4; width: max-content; letter-spacing: 5px;">
                     ${otp}
                 </div>
-                <p style="color: #999; font-size: 12px;">This code expires in 5 minutes. If you didn't request this, please ignore this email.</p>
+                <p style="color: #999; font-size: 12px;">This code expires in 10 minutes. If you didn't request this, please ignore this email.</p>
             </div>
         `
     };
@@ -93,4 +108,27 @@ const sendOTPEmail = async (userEmail, otp, type) => {
     }
 };
 
-module.exports = { sendBookingEmail, sendOTPEmail };
+/**
+ * Fire-and-forget version of sendOTPEmail.
+ * Sends the email in the background without blocking the API response.
+ * The OTP is already stored in the database, so the response can go out immediately.
+ */
+const sendOTPEmailInBackground = (userEmail, otp, type) => {
+    // Log OTP to console immediately (synchronous)
+    console.log(`\n🔐 ===== OTP for ${userEmail} =====`);
+    console.log(`🔐 OTP Code: ${otp}`);
+    console.log(`🔐 Type: ${type}`);
+    console.log(`🔐 ================================\n`);
+
+    if (!transporter) {
+        console.log('📧 [MOCK] Email not configured — use the OTP from console above.');
+        return;
+    }
+
+    // Fire-and-forget: don't await
+    sendOTPEmail(userEmail, otp, type).catch((err) => {
+        console.error('⚠️  Background email send failed:', err.message);
+    });
+};
+
+module.exports = { sendBookingEmail, sendOTPEmail, sendOTPEmailInBackground };

@@ -123,7 +123,11 @@ const Login = () => {
                   </button>
                 </form>
 
-                <p className="text-center mt-8 text-black/50 text-sm">
+                <p className="text-center mt-6 text-black/50 text-sm">
+                  <Link to="/forgot-password" className="text-primary font-semibold hover:underline">Forgot Password?</Link>
+                </p>
+
+                <p className="text-center mt-4 text-black/50 text-sm">
                   Don't have an account?{' '}
                   <Link to="/register" className="text-primary font-semibold hover:underline">Sign up</Link>
                 </p>
