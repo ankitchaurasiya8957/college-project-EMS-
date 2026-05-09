@@ -57,8 +57,8 @@ export function RevenueLineChart({ bookings }) {
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const data = months.map((name, i) => ({
     name,
-    revenue: bookings.filter(b => b.paymentStatus === 'paid' && b.status === 'confirmed' && new Date(b.bookedAt).getMonth() === i)
-      .reduce((s, b) => s + b.amount, 0)
+    revenue: bookings.filter(b => b.paymentStatus === 'paid' && b.status === 'confirmed' && new Date(b.bookedAt || b.createdAt).getMonth() === i)
+      .reduce((s, b) => s + (Number(b.amount) || 0), 0)
   }));
   return (
     <ResponsiveContainer width="100%" height={260}>

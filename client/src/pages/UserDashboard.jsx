@@ -3,7 +3,6 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../utils/axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Ticket, XCircle, Calendar, ArrowRight, ExternalLink } from 'lucide-react';
-import SectionTag from '../components/SectionTag';
 
 const UserDashboard = () => {
     const { user } = useContext(AuthContext);
@@ -56,7 +55,6 @@ const UserDashboard = () => {
                 {user?.name.charAt(0)}
               </div>
               <div className="text-center sm:text-left">
-                <SectionTag>Dashboard</SectionTag>
                 <h1 className="font-heading text-3xl md:text-4xl font-semibold text-dark tracking-tight mt-2">
                   Welcome, {user?.name}
                 </h1>

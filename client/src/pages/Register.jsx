@@ -2,7 +2,6 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle, KeyRound } from 'lucide-react';
-import SectionTag from '../components/SectionTag';
 
 const Register = () => {
     const [name, setName] = useState('');
@@ -68,7 +67,6 @@ const Register = () => {
           <section className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-20">
             <div className="max-w-md mx-auto">
               <div className="text-center mb-10">
-                <SectionTag>Account</SectionTag>
                 <h1 className="font-heading text-4xl md:text-5xl font-semibold text-dark leading-tight mt-4 tracking-tight">
                   Create account
                 </h1>

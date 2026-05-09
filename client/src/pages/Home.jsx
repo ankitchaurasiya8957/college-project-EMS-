@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Search, ArrowRight, Calendar, MapPin, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft } from 'lucide-react';
 import api from '../utils/axios';
 import EventCard from '../components/EventCard';
-import SectionTag from '../components/SectionTag';
 
 function useInView(ref) {
   const [inView, setInView] = useState(false)
@@ -265,7 +264,6 @@ const Home = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                   {/* Left - Text */}
                   <div>
-                    <SectionTag>Why Eventora</SectionTag>
                     <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-semibold text-dark leading-tight mt-4 tracking-tight">
                       Discover events with<br className="hidden lg:block" /> seamless booking.
                     </h2>
@@ -312,7 +310,6 @@ const Home = () => {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                   <div>
-                    <SectionTag>Events</SectionTag>
                     <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-semibold text-dark leading-tight mt-4 tracking-tight">
                       Upcoming experiences.
                     </h2>
@@ -377,7 +374,6 @@ const Home = () => {
                     {/* Right - Info */}
                     <div className="flex flex-col justify-between">
                       <div>
-                        <SectionTag>Featured event</SectionTag>
                         <h2 className="font-heading text-3xl md:text-4xl font-semibold text-dark mt-4 tracking-tight">
                           {featuredEvent.title}
                         </h2>
@@ -440,7 +436,6 @@ const Home = () => {
                   <div>
                     <div className="flex items-start justify-between mb-10">
                       <div>
-                        <SectionTag light>Testimonials</SectionTag>
                         <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-semibold text-white leading-tight mt-4 tracking-tight">
                           What our users say
                         </h2>

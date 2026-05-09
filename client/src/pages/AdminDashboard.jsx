@@ -3,7 +3,6 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../utils/axios';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award } from 'lucide-react';
-import SectionTag from '../components/SectionTag';
 import { CategoryPieChart, MonthlyBarChart, RevenueLineChart } from '../components/DashboardCharts';
 import EditEventModal from '../components/EditEventModal';
 import './AdminDashboard.css';
@@ -46,7 +45,7 @@ const AdminDashboard = () => {
       console.error('Error fetching events:', error);
     }
     try {
-      const bookingsRes = await api.get('/bookings/my');
+      const bookingsRes = await api.get('/bookings/all');
       setBookings(Array.isArray(bookingsRes.data) ? bookingsRes.data : []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -104,7 +103,7 @@ const AdminDashboard = () => {
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, categoryFilter]);
 
-  const totalRevenue = bookings.reduce((s, b) => b.paymentStatus === 'paid' && b.status === 'confirmed' ? s + b.amount : s, 0);
+  const totalRevenue = bookings.reduce((s, b) => b.paymentStatus === 'paid' && b.status === 'confirmed' ? s + (Number(b.amount) || 0) : s, 0);
   const paidClients = new Set(bookings.filter(b => b.paymentStatus === 'paid' && b.status === 'confirmed').map(b => b.userId?._id)).size;
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
   const upcomingCount = events.filter(e => getEventStatus(e.date) === 'upcoming').length;
@@ -132,7 +131,6 @@ const AdminDashboard = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
           <div>
-            <SectionTag>Admin</SectionTag>
             <h1 className="font-heading text-3xl md:text-4xl font-semibold text-dark tracking-tight mt-2">Dashboard</h1>
             <p className="text-black/50 text-base mt-1">Manage events, track analytics, and handle bookings.</p>
           </div>
@@ -272,7 +270,7 @@ const AdminDashboard = () => {
         )}
 
         {/* Metric Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 stagger-children">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4 mb-8 stagger-children">
           {[
             { label: 'Total Events', value: events.length, icon: <Calendar size={20} />, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
             { label: 'Upcoming', value: upcomingCount, icon: <TrendingUp size={20} />, color: 'green', bg: 'bg-emerald-50', text: 'text-emerald-600' },

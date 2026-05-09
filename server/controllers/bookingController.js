@@ -97,6 +97,18 @@ exports.getMyBookings = async (req, res) => {
     }
 };
 
+exports.getAllBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find()
+            .populate('eventId')
+            .populate('userId', 'name email')
+            .sort({ createdAt: -1 });
+        res.json(bookings);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
 exports.cancelBooking = async (req, res) => {
     try {
         const booking = await Booking.findById(req.params.id);
