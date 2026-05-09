@@ -21,6 +21,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/payments', require('./routes/payments'));
 
 // ── Health Check ──
 app.get('/api/health', (req, res) => {

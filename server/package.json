@@ -16,7 +16,8 @@
         "jsonwebtoken": "^9.0.2",
         "mongodb-memory-server": "^11.1.0",
         "mongoose": "^8.2.0",
-        "nodemailer": "^8.0.7"
+        "nodemailer": "^8.0.7",
+        "razorpay": "^2.9.6"
     },
     "devDependencies": {
         "nodemon": "^3.1.0"

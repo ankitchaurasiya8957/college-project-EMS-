@@ -1,11 +1,16 @@
 const Booking = require('../models/Booking');
 const Event = require('../models/Event');
+const Payment = require('../models/Payment');
 const OTP = require('../models/OTP');
 const { sendBookingEmail, sendOTPEmail } = require('../utils/email');
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const OTP_EXPIRY_MINUTES = 10;
 
+/**
+ * POST /api/bookings/send-otp
+ * Send OTP for booking verification (legacy flow for non-payment bookings)
+ */
 exports.sendBookingOTP = async (req, res) => {
     try {
         const otp = generateOTP();
@@ -19,6 +24,10 @@ exports.sendBookingOTP = async (req, res) => {
     }
 };
 
+/**
+ * POST /api/bookings
+ * Create a booking (legacy OTP-based flow)
+ */
 exports.bookEvent = async (req, res) => {
     try {
         const { eventId, otp } = req.body;
@@ -34,8 +43,12 @@ exports.bookEvent = async (req, res) => {
         if (!event) return res.status(404).json({ message: 'Event not found' });
         if (event.availableSeats <= 0) return res.status(400).json({ message: 'No seats available' });
 
-        const existingBooking = await Booking.findOne({ userId: req.user.id, eventId });
-        if (existingBooking && existingBooking.status !== 'cancelled') {
+        const existingBooking = await Booking.findOne({
+            userId: req.user.id,
+            eventId,
+            status: { $in: ['pending', 'confirmed'] }
+        });
+        if (existingBooking) {
             return res.status(400).json({ message: 'Already booked or pending' });
         }
 
@@ -55,6 +68,10 @@ exports.bookEvent = async (req, res) => {
     }
 };
 
+/**
+ * PUT /api/bookings/:id/confirm
+ * Admin: Confirm a pending booking
+ */
 exports.confirmBooking = async (req, res) => {
     try {
         const { paymentStatus } = req.body; // 'paid' or 'not_paid'
@@ -86,6 +103,10 @@ exports.confirmBooking = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/bookings/my
+ * Get current user's bookings
+ */
 exports.getMyBookings = async (req, res) => {
     try {
         const bookings = req.user.role === 'admin'
@@ -97,6 +118,10 @@ exports.getMyBookings = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/bookings/all
+ * Admin: Get all bookings
+ */
 exports.getAllBookings = async (req, res) => {
     try {
         const bookings = await Booking.find()
@@ -109,6 +134,10 @@ exports.getAllBookings = async (req, res) => {
     }
 };
 
+/**
+ * DELETE /api/bookings/:id
+ * Cancel a booking
+ */
 exports.cancelBooking = async (req, res) => {
     try {
         const booking = await Booking.findById(req.params.id);
@@ -133,6 +162,118 @@ exports.cancelBooking = async (req, res) => {
         }
 
         res.json({ message: 'Booking cancelled successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+/**
+ * GET /api/bookings/event/:eventId/participants
+ * Get all participants for a specific event (Admin)
+ */
+exports.getEventParticipants = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        const event = await Event.findById(eventId);
+        if (!event) return res.status(404).json({ message: 'Event not found' });
+
+        const bookings = await Booking.find({ eventId, status: { $in: ['confirmed', 'pending'] } })
+            .populate('userId', 'name email')
+            .sort({ createdAt: -1 });
+
+        // Fetch associated payments for these bookings
+        const payments = await Payment.find({
+            eventId,
+            paymentStatus: 'paid'
+        }).select('userId transactionId paymentMethod amount paidAt');
+
+        // Build a map of userId -> payment info
+        const paymentMap = {};
+        payments.forEach(p => {
+            paymentMap[p.userId.toString()] = {
+                transactionId: p.transactionId,
+                paymentMethod: p.paymentMethod,
+                paidAmount: p.amount,
+                paidAt: p.paidAt,
+            };
+        });
+
+        const participants = bookings.map(b => ({
+            _id: b._id,
+            bookingId: b.bookingId,
+            bookingType: b.bookingType || 'booking',
+            user: b.userId,
+            status: b.status,
+            paymentStatus: b.paymentStatus,
+            paymentMethod: b.paymentMethod || paymentMap[b.userId?._id?.toString()]?.paymentMethod || null,
+            transactionId: b.transactionId || paymentMap[b.userId?._id?.toString()]?.transactionId || null,
+            amount: b.amount,
+            bookedAt: b.bookedAt,
+        }));
+
+        res.json({
+            event: {
+                _id: event._id,
+                title: event.title,
+                date: event.date,
+                location: event.location,
+                category: event.category,
+                totalSeats: event.totalSeats,
+                availableSeats: event.availableSeats,
+                ticketPrice: event.ticketPrice,
+            },
+            totalParticipants: bookings.filter(b => b.status === 'confirmed').length,
+            pendingCount: bookings.filter(b => b.status === 'pending').length,
+            participants,
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+/**
+ * GET /api/bookings/analytics
+ * Admin: Booking analytics
+ */
+exports.getBookingAnalytics = async (req, res) => {
+    try {
+        const totalBookings = await Booking.countDocuments();
+        const confirmedBookings = await Booking.countDocuments({ status: 'confirmed' });
+        const pendingBookings = await Booking.countDocuments({ status: 'pending' });
+        const cancelledBookings = await Booking.countDocuments({ status: 'cancelled' });
+        const paidBookings = await Booking.countDocuments({ paymentStatus: 'paid', status: 'confirmed' });
+
+        // Revenue calculation
+        const paidBookingsList = await Booking.find({ paymentStatus: 'paid', status: 'confirmed' });
+        const totalRevenue = paidBookingsList.reduce((sum, b) => sum + (b.amount || 0), 0);
+
+        // Bookings per event
+        const eventBookings = await Booking.aggregate([
+            { $match: { status: { $in: ['confirmed', 'pending'] } } },
+            { $group: { _id: '$eventId', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+        ]);
+
+        // Populate event names
+        const Event = require('../models/Event');
+        const populatedEventBookings = await Promise.all(
+            eventBookings.map(async (eb) => {
+                const event = await Event.findById(eb._id).select('title');
+                return { event: event?.title || 'Unknown', count: eb.count };
+            })
+        );
+
+        res.json({
+            totalBookings,
+            confirmedBookings,
+            pendingBookings,
+            cancelledBookings,
+            paidBookings,
+            totalRevenue,
+            topEvents: populatedEventBookings,
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
