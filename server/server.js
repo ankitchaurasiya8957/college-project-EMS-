@@ -45,7 +45,44 @@ const connectDB = async () => {
   }
 };
 
+// Start server with automatic port retry on conflict
+const startServer = (port) => {
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`\n✅ Server running on port ${port} at http://localhost:${port}`);
+    console.log(`   API available at http://localhost:${port}/api\n`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`⚠️  Port ${port} is already in use, trying port ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err.message);
+    }
+  });
+
+  // Graceful shutdown on Ctrl+C
+  process.on('SIGINT', () => {
+    console.log('\n🛑 Shutting down server gracefully...');
+    server.close(() => {
+      mongoose.connection.close(false, () => {
+        console.log('MongoDB connection closed.');
+        process.exit(0);
+      });
+    });
+  });
+};
+
+// Prevent crash on unhandled errors
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled Rejection:', reason);
+});
+
 connectDB().then(() => {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT} at 0.0.0.0`));
+  const PORT = parseInt(process.env.PORT) || 5000;
+  startServer(PORT);
 });
