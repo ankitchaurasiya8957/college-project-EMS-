@@ -35,6 +35,26 @@ app.get('/api/health', (req, res) => {
 
 // Database Connection
 const connectDB = async () => {
+<<<<<<< Updated upstream
+=======
+  const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/eventora';
+
+  // Bypass local DNS blocking (ECONNREFUSED on SRV query) by using Google DNS
+  try {
+    const dns = require('dns');
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+  } catch (e) {
+    console.error('DNS override failed:', e.message);
+  }
+
+  // Use in-memory DB only if explicitly set in .env (USE_MEMORY_DB=true)
+  if (process.env.USE_MEMORY_DB === 'true') {
+    return await startInMemoryDB();
+  }
+
+  // Try connecting to Atlas / remote MongoDB
+  console.log('Connecting to MongoDB...');
+>>>>>>> Stashed changes
   try {
     const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/eventora';
     await mongoose.connect(uri);
