@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import eventService from '../services/eventService';
+import bookingService from '../services/bookingService';
 import { AuthContext } from '../context/AuthContext';
 import PaymentModal from '../components/PaymentModal';
 import { ArrowLeft, ArrowRight, Calendar, MapPin, Users, Ticket, Sparkles, Share2, Heart, CreditCard, Zap, Shield, Clock } from 'lucide-react';
@@ -14,12 +15,25 @@ const EventDetail = () => {
     const [error, setError] = useState('');
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [bookingType, setBookingType] = useState('booking');
+    const [hasBooked, setHasBooked] = useState(false);
 
     useEffect(() => {
         const fetchEvent = async () => {
             try {
                 const data = await eventService.getById(id);
                 setEvent(data);
+
+                if (user) {
+                    const myBookings = await bookingService.getMine();
+                    const currentUserId = user._id || user.id;
+                    const alreadyBooked = myBookings.some(b => {
+                        const isThisEvent = (b.eventId?._id === id || b.eventId === id);
+                        const isActive = (b.status === 'confirmed' || b.status === 'pending');
+                        const isThisUser = (b.userId?._id === currentUserId || b.userId === currentUserId);
+                        return isThisEvent && isActive && isThisUser;
+                    });
+                    setHasBooked(alreadyBooked);
+                }
             } catch (err) {
                 setError('Failed to load event details.');
             } finally {
@@ -27,7 +41,7 @@ const EventDetail = () => {
             }
         };
         fetchEvent();
-    }, [id]);
+    }, [id, user]);
 
     const handleBookAction = (type) => {
         if (!user) {
@@ -38,9 +52,13 @@ const EventDetail = () => {
         setShowPaymentModal(true);
     };
 
-    const handlePaymentSuccess = (booking) => {
-        // Re-fetch event to update seat count
-        eventService.getById(id).then(data => setEvent(data)).catch(() => {});
+    const handlePaymentSuccess = async (booking) => {
+        // Re-fetch event to update seat count and hasBooked state
+        try {
+            const data = await eventService.getById(id);
+            setEvent(data);
+            setHasBooked(true);
+        } catch (err) {}
     };
 
     if (loading) return (
@@ -173,34 +191,38 @@ const EventDetail = () => {
                   </div>
 
                   {/* Seats Bar */}
-                  <div className="mb-6">
-                    <div className="w-full bg-black/5 rounded-full h-2 mb-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${seatsPercent > 30 ? 'bg-primary' : seatsPercent > 10 ? 'bg-amber-500' : 'bg-red-500'}`}
-                        style={{ width: `${seatsPercent}%` }}
-                      />
+                  {!hasBooked && (
+                    <div className="mb-6">
+                      <div className="w-full bg-black/5 rounded-full h-2 mb-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${seatsPercent > 30 ? 'bg-primary' : seatsPercent > 10 ? 'bg-amber-500' : 'bg-red-500'}`}
+                          style={{ width: `${seatsPercent}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-black/50">
+                        {event.availableSeats} of {event.totalSeats} seats remaining
+                        {seatsPercent <= 20 && event.availableSeats > 0 && (
+                          <span className="text-red-500 font-medium ml-1">— Filling fast!</span>
+                        )}
+                      </p>
                     </div>
-                    <p className="text-xs text-black/50">
-                      {event.availableSeats} of {event.totalSeats} seats remaining
-                      {seatsPercent <= 20 && event.availableSeats > 0 && (
-                        <span className="text-red-500 font-medium ml-1">— Filling fast!</span>
-                      )}
-                    </p>
-                  </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="space-y-3">
                     {/* Book Now Button */}
                     <button
                       onClick={() => handleBookAction('booking')}
-                      disabled={isSoldOut}
+                      disabled={isSoldOut || hasBooked}
                       className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-full font-semibold text-sm transition-all ${
-                        isSoldOut
+                        isSoldOut || hasBooked
                           ? 'bg-black/10 text-black/40 cursor-not-allowed'
                           : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/25'
                       }`}
                     >
-                      {isSoldOut ? (
+                      {hasBooked ? (
+                        <>✓ Booked</>
+                      ) : isSoldOut ? (
                         <>Sold Out</>
                       ) : (
                         <>{isFree ? <Zap size={16} /> : <CreditCard size={16} />} {isFree ? 'Register Free' : `Book Now — ₹${event.ticketPrice}`}</>
@@ -208,7 +230,7 @@ const EventDetail = () => {
                     </button>
 
                     {/* Participate Button */}
-                    {!isSoldOut && (
+                    {!isSoldOut && !hasBooked && (
                       <button
                         onClick={() => handleBookAction('participation')}
                         className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-medium text-sm transition-all border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"

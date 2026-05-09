@@ -325,13 +325,6 @@ const AdminDashboard = () => {
                       {booking.paymentMethod && <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">Method:</span><span className="font-medium text-dark uppercase text-xs">{booking.paymentMethod}</span></p>}
                       <p className="text-black/60"><span className="font-semibold text-black/40 uppercase text-xs w-20 inline-block">Date:</span>{new Date(booking.bookedAt).toLocaleString()}</p>
                     </div>
-                    {booking.status === 'pending' && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        <button onClick={() => handleConfirmBooking(booking._id, 'paid')} className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-200 text-xs font-semibold transition-all"><CheckCircle size={14} /> Approve Paid</button>
-                        <button onClick={() => handleConfirmBooking(booking._id, 'not_paid')} className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full bg-black/5 text-dark hover:bg-dark hover:text-white border border-black/10 text-xs font-semibold transition-all"><CheckCircle size={14} /> Approve</button>
-                        <button onClick={() => handleCancelBooking(booking._id)} className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border border-red-200 text-xs font-semibold transition-all"><XCircle size={14} /> Reject</button>
-                      </div>
-                    )}
                   </li>
                 ))}
               </ul>
@@ -359,9 +352,8 @@ const AdminDashboard = () => {
                     <span>💺 {participants.event.availableSeats}/{participants.event.totalSeats} seats</span>
                   </div>
                   <div className="flex gap-6 mt-4">
+                    <div><p className="text-2xl font-bold">{participants.participants.length}</p><p className="text-xs opacity-70">Total Bookings</p></div>
                     <div><p className="text-2xl font-bold">{participants.totalParticipants}</p><p className="text-xs opacity-70">Confirmed</p></div>
-                    <div><p className="text-2xl font-bold">{participants.pendingCount}</p><p className="text-xs opacity-70">Pending</p></div>
-                    <div><p className="text-2xl font-bold">{participants.participants.length}</p><p className="text-xs opacity-70">Total</p></div>
                   </div>
                 </div>
                 {/* Search & Filter */}
@@ -420,8 +412,8 @@ const AdminDashboard = () => {
             <h3 className="text-3xl font-heading font-bold">₹{totalRevenue.toLocaleString()}</h3>
           </div>
           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white">
-            <div className="flex items-center gap-3 mb-2"><Users size={20} /><span className="text-sm font-medium opacity-80">Paid Clients / Pending</span></div>
-            <h3 className="text-3xl font-heading font-bold">{paidClients} <span className="text-base font-normal opacity-70">/ {pendingCount} pending</span></h3>
+            <div className="flex items-center gap-3 mb-2"><Users size={20} /><span className="text-sm font-medium opacity-80">Paid Clients / Total Bookings</span></div>
+            <h3 className="text-3xl font-heading font-bold">{paidClients} <span className="text-base font-normal opacity-70">/ {bookings.length} total</span></h3>
           </div>
         </div>
 
