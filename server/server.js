@@ -35,38 +35,24 @@ app.get('/api/health', (req, res) => {
 
 // Database Connection
 const connectDB = async () => {
-  const configuredUri = process.env.MONGO_URI;
-
-  if (!configuredUri) {
-    console.warn('\n⚠️  WARNING: MONGO_URI is not set in .env file!');
-    console.warn('   Trying local MongoDB at mongodb://localhost:27017/eventora ...\n');
-  }
-
   try {
-    const uri = configuredUri || 'mongodb://localhost:27017/eventora';
+    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/eventora';
     await mongoose.connect(uri);
-    console.log(`\n✅ MongoDB Connected Successfully`);
-    console.log(`   Mode: ${configuredUri ? 'Remote (Atlas/Cloud)' : 'Local (localhost)'}`);
-    console.log(`   Database: ${mongoose.connection.db.databaseName}\n`);
+    console.log('MongoDB Connected (Remote/Local)');
   } catch (err) {
-    console.error('\n❌ Primary MongoDB Connection Error:', err.message);
-    console.log('   Attempting to start local in-memory MongoDB Server as fallback...');
+    console.error('Primary MongoDB Connection Error:', err.message);
+    console.log('Attempting to start local in-memory MongoDB Server as fallback...');
     try {
       const { MongoMemoryServer } = require('mongodb-memory-server');
       const seedDatabase = require('./seed');
       const mongoServer = await MongoMemoryServer.create();
       const memoryUri = mongoServer.getUri();
       await mongoose.connect(memoryUri);
-      console.warn('\n' + '='.repeat(70));
-      console.warn('  ⚠️  RUNNING WITH IN-MEMORY DATABASE — DATA WILL NOT PERSIST!');
-      console.warn('  Events, users, and bookings will be LOST when the server stops.');
-      console.warn('  Set MONGO_URI in server/.env to use a real MongoDB instance.');
-      console.warn('='.repeat(70) + '\n');
-      console.log('   Populating in-memory database with sample data...');
+      console.log('MongoDB Connected (In-Memory Fallback)');
+      console.log('Populating in-memory database with initial data...');
       await seedDatabase(mongoose);
     } catch (memErr) {
-      console.error('❌ In-Memory MongoDB Connection Error:', memErr.message);
-      console.error('   The server will start but NO database operations will work!');
+      console.error('In-Memory MongoDB Connection Error:', memErr.message);
     }
   }
 };
