@@ -106,6 +106,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateProfile = async (name) => {
+        try {
+            const { data } = await api.put('/auth/profile', { name });
+            setUser(data);
+            localStorage.setItem('userInfo', JSON.stringify(data));
+            localStorage.setItem('token', data.token);
+            return data;
+        } catch (error) {
+            if (!error.response) {
+                throw 'Cannot connect to the server.';
+            }
+            throw error.response?.data?.message || 'Profile update failed';
+        }
+    };
+
     const logout = () => {
         setUser(null);
         localStorage.removeItem('userInfo');
@@ -122,6 +137,7 @@ export const AuthProvider = ({ children }) => {
             forgotPassword,
             verifyResetOTP,
             resetPassword,
+            updateProfile,
             logout,
             loading
         }}>

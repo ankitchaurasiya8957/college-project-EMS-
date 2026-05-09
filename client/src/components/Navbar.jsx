@@ -87,9 +87,23 @@ export default function Header() {
                   </Link>
                 </>
               ) : (
-                <div className={`flex items-center gap-2 transition-colors duration-500 ${(!isHome || scrolled) ? 'text-dark' : 'text-white'}`}>
-                  <span className="text-[15px] font-medium">Hi, {user.name}</span>
-                </div>
+                <Link 
+                  to="/profile" 
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-300 ${
+                    (!isHome || scrolled) 
+                      ? 'text-dark hover:bg-black/5' 
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=10b981&color=fff&bold=true`} 
+                      alt={user.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-[15px] font-medium pr-2">{user.name.split(' ')[0]}</span>
+                </Link>
               )}
 
               <button

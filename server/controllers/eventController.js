@@ -62,9 +62,32 @@ exports.createEvent = async (req, res) => {
 
 exports.updateEvent = async (req, res) => {
     try {
-        const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const event = await Event.findById(req.params.id);
         if (!event) return res.status(404).json({ message: 'Event not found' });
-        res.json(event);
+
+        Object.assign(event, req.body);
+
+        // If totalSeats is being updated, automatically recalculate availableSeats accurately
+        if (req.body.totalSeats !== undefined) {
+            const newTotalSeats = parseInt(req.body.totalSeats);
+            if (!isNaN(newTotalSeats)) {
+                const Booking = require('../models/Booking');
+                const bookedCount = await Booking.countDocuments({ 
+                    eventId: event._id, 
+                    status: 'confirmed' 
+                });
+                
+                event.availableSeats = newTotalSeats - bookedCount;
+                
+                // Prevent availableSeats from becoming negative
+                if (event.availableSeats < 0) {
+                    event.availableSeats = 0;
+                }
+            }
+        }
+
+        const updatedEvent = await event.save();
+        res.json(updatedEvent);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

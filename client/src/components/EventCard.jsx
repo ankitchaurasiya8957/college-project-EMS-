@@ -83,7 +83,7 @@ export default function EventCard({ event, featured = false }) {
               {event.availableSeats} of {event.totalSeats} seats
             </p>
             {event.availableSeats <= 0 && (
-              <span className="text-xs font-semibold text-red-500">SOLD OUT</span>
+              <span className="text-xs font-semibold text-red-500 uppercase tracking-wide">SEAT FULL</span>
             )}
           </div>
         </div>
