@@ -136,62 +136,13 @@ const AdminDashboard = () => {
             <h1 className="font-heading text-3xl md:text-4xl font-semibold text-dark tracking-tight mt-2">Dashboard</h1>
             <p className="text-black/50 text-base mt-1">Manage events, track analytics, and handle bookings.</p>
           </div>
-          <button onClick={() => { setShowEventForm(!showEventForm); setActiveTab('overview'); }}
-            className={`flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-sm transition-all ${showEventForm ? 'bg-black/10 text-dark hover:bg-black/20' : 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20'}`}>
-            <Plus size={18} /> {showEventForm ? 'Cancel' : 'Create Event'}
+          <button onClick={() => setShowEventForm(true)}
+            className="flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-sm transition-all bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20">
+            <Plus size={18} /> Create Event
           </button>
         </div>
 
-        {/* Metric Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 stagger-children">
-          {[
-            { label: 'Total Events', value: events.length, icon: <Calendar size={20} />, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
-            { label: 'Upcoming', value: upcomingCount, icon: <TrendingUp size={20} />, color: 'green', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-            { label: 'Ongoing', value: ongoingCount, icon: <Clock size={20} />, color: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
-            { label: 'Completed', value: completedCount, icon: <Award size={20} />, color: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
-            { label: 'Attendees', value: totalAttendees, icon: <Users size={20} />, color: 'rose', bg: 'bg-rose-50', text: 'text-rose-500' },
-          ].map((m, i) => (
-            <div key={i} className={`metric-card ${m.color} bg-white rounded-2xl border border-black/6 p-5`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl ${m.bg} flex items-center justify-center ${m.text}`}>{m.icon}</div>
-              </div>
-              <h3 className="text-2xl md:text-3xl font-heading font-bold text-dark">{m.value}</h3>
-              <p className="text-black/40 text-xs font-semibold uppercase tracking-wider mt-1">{m.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Revenue & Paid Clients mini cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white">
-            <div className="flex items-center gap-3 mb-2"><IndianRupee size={20} /><span className="text-sm font-medium opacity-80">Total Revenue</span></div>
-            <h3 className="text-3xl font-heading font-bold">₹{totalRevenue.toLocaleString()}</h3>
-          </div>
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white">
-            <div className="flex items-center gap-3 mb-2"><Users size={20} /><span className="text-sm font-medium opacity-80">Paid Clients / Pending</span></div>
-            <h3 className="text-3xl font-heading font-bold">{paidClients} <span className="text-base font-normal opacity-70">/ {pendingCount} pending</span></h3>
-          </div>
-        </div>
-
-        {/* Create Event Form */}
-        {showEventForm && (
-          <div className="bg-white rounded-2xl border border-black/10 p-8 lg:p-10 mb-8" style={{ animation: 'slideUp 0.3s ease-out' }}>
-            <h2 className="font-heading text-2xl font-semibold text-dark mb-8">Create New Event</h2>
-            <form onSubmit={handleCreateEvent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div><label className="text-sm font-medium text-dark block mb-2">Event Title</label><input required type="text" placeholder="e.g., Tech Summit 2025" className={inputCls} value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} /></div>
-              <div><label className="text-sm font-medium text-dark block mb-2">Category</label><input required type="text" placeholder="e.g., Tech, Music" className={inputCls} value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} /></div>
-              <div><label className="text-sm font-medium text-dark block mb-2">Date</label><input required type="date" className={inputCls} value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} /></div>
-              <div><label className="text-sm font-medium text-dark block mb-2">Location</label><input required type="text" placeholder="e.g., Mumbai" className={inputCls} value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} /></div>
-              <div><label className="text-sm font-medium text-dark block mb-2">Total Seats</label><input required type="number" placeholder="100" className={inputCls} value={formData.totalSeats} onChange={e => setFormData({ ...formData, totalSeats: e.target.value })} /></div>
-              <div><label className="text-sm font-medium text-dark block mb-2">Ticket Price (₹)</label><input type="number" placeholder="0 for free" className={inputCls} value={formData.ticketPrice} onChange={e => setFormData({ ...formData, ticketPrice: e.target.value })} /></div>
-              <div className="md:col-span-2"><label className="text-sm font-medium text-dark block mb-2">Image URL</label><input type="text" placeholder="Paste image link" className={inputCls} value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} /></div>
-              <div className="md:col-span-2"><label className="text-sm font-medium text-dark block mb-2">Description</label><textarea required placeholder="Describe the event..." className={`${inputCls} resize-none h-32`} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} /></div>
-              <div className="md:col-span-2"><button type="submit" className="flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-all w-full md:w-auto shadow-lg shadow-primary/20"><Sparkles size={16} />Publish Event</button></div>
-            </form>
-          </div>
-        )}
-
-        {/* Tabs */}
+                {/* Tabs */}
         <div className="flex items-center gap-1 border-b border-black/5 mb-8 overflow-x-auto">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)} className={`tab-btn flex items-center gap-2 ${activeTab === t.id ? 'active' : ''}`}>
@@ -316,6 +267,65 @@ const AdminDashboard = () => {
                   </li>
                 ))}
               </ul>
+            </div>
+          </div>
+        )}
+
+        {/* Metric Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 stagger-children">
+          {[
+            { label: 'Total Events', value: events.length, icon: <Calendar size={20} />, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
+            { label: 'Upcoming', value: upcomingCount, icon: <TrendingUp size={20} />, color: 'green', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+            { label: 'Ongoing', value: ongoingCount, icon: <Clock size={20} />, color: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
+            { label: 'Completed', value: completedCount, icon: <Award size={20} />, color: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
+            { label: 'Attendees', value: totalAttendees, icon: <Users size={20} />, color: 'rose', bg: 'bg-rose-50', text: 'text-rose-500' },
+          ].map((m, i) => (
+            <div key={i} className={`metric-card ${m.color} bg-white rounded-2xl border border-black/6 p-5`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-10 h-10 rounded-xl ${m.bg} flex items-center justify-center ${m.text}`}>{m.icon}</div>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-heading font-bold text-dark">{m.value}</h3>
+              <p className="text-black/40 text-xs font-semibold uppercase tracking-wider mt-1">{m.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Revenue & Paid Clients mini cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white">
+            <div className="flex items-center gap-3 mb-2"><IndianRupee size={20} /><span className="text-sm font-medium opacity-80">Total Revenue</span></div>
+            <h3 className="text-3xl font-heading font-bold">₹{totalRevenue.toLocaleString()}</h3>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white">
+            <div className="flex items-center gap-3 mb-2"><Users size={20} /><span className="text-sm font-medium opacity-80">Paid Clients / Pending</span></div>
+            <h3 className="text-3xl font-heading font-bold">{paidClients} <span className="text-base font-normal opacity-70">/ {pendingCount} pending</span></h3>
+          </div>
+        </div>
+
+        {/* Create Event Modal */}
+        {showEventForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+            <div className="bg-white rounded-2xl border border-black/10 p-8 lg:p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" style={{ animation: 'slideUp 0.3s ease-out' }}>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="font-heading text-2xl font-semibold text-dark">Create New Event</h2>
+                <button type="button" onClick={() => setShowEventForm(false)} className="text-black/40 hover:text-dark transition">
+                  <XCircle size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleCreateEvent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label className="text-sm font-medium text-dark block mb-2">Event Title</label><input required type="text" placeholder="e.g., Tech Summit 2025" className={inputCls} value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} /></div>
+                <div><label className="text-sm font-medium text-dark block mb-2">Category</label><input required type="text" placeholder="e.g., Tech, Music" className={inputCls} value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} /></div>
+                <div><label className="text-sm font-medium text-dark block mb-2">Date</label><input required type="date" className={inputCls} value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} /></div>
+                <div><label className="text-sm font-medium text-dark block mb-2">Location</label><input required type="text" placeholder="e.g., Mumbai" className={inputCls} value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} /></div>
+                <div><label className="text-sm font-medium text-dark block mb-2">Total Seats</label><input required type="number" placeholder="100" className={inputCls} value={formData.totalSeats} onChange={e => setFormData({ ...formData, totalSeats: e.target.value })} /></div>
+                <div><label className="text-sm font-medium text-dark block mb-2">Ticket Price (₹)</label><input type="number" placeholder="0 for free" className={inputCls} value={formData.ticketPrice} onChange={e => setFormData({ ...formData, ticketPrice: e.target.value })} /></div>
+                <div className="md:col-span-2"><label className="text-sm font-medium text-dark block mb-2">Image URL</label><input type="text" placeholder="Paste image link" className={inputCls} value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} /></div>
+                <div className="md:col-span-2"><label className="text-sm font-medium text-dark block mb-2">Description</label><textarea required placeholder="Describe the event..." className={`${inputCls} resize-none h-32`} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} /></div>
+                <div className="md:col-span-2 flex justify-end gap-3 mt-2">
+                  <button type="button" onClick={() => setShowEventForm(false)} className="px-6 py-3.5 rounded-full font-medium text-sm text-dark hover:bg-black/5 transition-all">Cancel</button>
+                  <button type="submit" className="flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"><Sparkles size={16} />Publish Event</button>
+                </div>
+              </form>
             </div>
           </div>
         )}
