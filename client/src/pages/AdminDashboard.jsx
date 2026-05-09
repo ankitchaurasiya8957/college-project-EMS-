@@ -453,7 +453,7 @@ const AdminDashboard = () => {
       </section>
 
       {/* Edit Modal */}
-      {editEvent && <EditEventModal event={editEvent} onClose={() => setEditEvent(null)} onSave={handleEditSave} />}
+      {editEvent && <EditEventModal event={editEvent} eventBookings={bookings.filter(b => (b.eventId?._id || b.eventId) === editEvent._id)} onClose={() => setEditEvent(null)} onSave={handleEditSave} />}
 
       {/* Toast */}
       {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
