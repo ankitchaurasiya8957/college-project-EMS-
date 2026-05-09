@@ -22,9 +22,30 @@ app.use('/api/events', eventRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 // Database Connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora')
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+const connectDB = async () => {
+  try {
+    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/eventora';
+    await mongoose.connect(uri);
+    console.log('MongoDB Connected (Remote/Local)');
+  } catch (err) {
+    console.error('Primary MongoDB Connection Error:', err.message);
+    console.log('Attempting to start local in-memory MongoDB Server as fallback...');
+    try {
+      const { MongoMemoryServer } = require('mongodb-memory-server');
+      const seedDatabase = require('./seed');
+      const mongoServer = await MongoMemoryServer.create();
+      const memoryUri = mongoServer.getUri();
+      await mongoose.connect(memoryUri);
+      console.log('MongoDB Connected (In-Memory Fallback)');
+      console.log('Populating in-memory database with initial data...');
+      await seedDatabase(mongoose);
+    } catch (memErr) {
+      console.error('In-Memory MongoDB Connection Error:', memErr.message);
+    }
+  }
+};
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+connectDB().then(() => {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT} at 0.0.0.0`));
+});

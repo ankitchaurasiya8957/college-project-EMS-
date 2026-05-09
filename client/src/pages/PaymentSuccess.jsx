@@ -1,23 +1,39 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaCheckCircle } from 'react-icons/fa';
+import { CheckCircle, Ticket, Home } from 'lucide-react';
 
 const PaymentSuccess = () => {
     return (
-        <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
-            <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-md w-full text-center border-t-8 border-green-500 transform transition-all hover:-translate-y-1">
-                <FaCheckCircle className="text-green-500 text-7xl mx-auto mb-6 drop-shadow-sm" />
-                <h1 className="text-4xl font-black text-gray-900 mb-4">Booking Confirmed!</h1>
-                <p className="text-gray-500 mb-8 text-lg">Your ticket has been booked successfully. A confirmation email has been sent to your registered email address.</p>
-                <div className="space-y-4">
-                    <Link to="/dashboard" className="block w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl transition shadow-lg hover:shadow-xl">
-                        View My Tickets
-                    </Link>
-                    <Link to="/" className="block w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 px-6 rounded-xl transition">
-                        Discover More Events
-                    </Link>
-                </div>
+        <div className="min-h-screen flex items-center justify-center px-6">
+          <div className="max-w-md w-full text-center">
+            <div className="bg-white rounded-2xl border border-black/10 p-10 lg:p-12">
+              <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle size={40} className="text-emerald-500" />
+              </div>
+              <h1 className="font-heading text-3xl md:text-4xl font-semibold text-dark tracking-tight mb-4">
+                Booking Confirmed!
+              </h1>
+              <p className="text-black/50 text-base mb-8 leading-relaxed">
+                Your ticket has been booked successfully. A confirmation email has been sent to your registered email address.
+              </p>
+              <div className="space-y-4">
+                <Link
+                  to="/dashboard"
+                  className="flex items-center justify-center gap-2 w-full px-8 py-3.5 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-all"
+                >
+                  <Ticket size={16} />
+                  View My Tickets
+                </Link>
+                <Link
+                  to="/"
+                  className="flex items-center justify-center gap-2 w-full px-8 py-3.5 border border-black/10 text-dark rounded-full font-medium text-sm hover:bg-black/5 transition-all"
+                >
+                  <Home size={16} />
+                  Discover More Events
+                </Link>
+              </div>
             </div>
+          </div>
         </div>
     );
 };

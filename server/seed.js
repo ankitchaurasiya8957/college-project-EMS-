@@ -83,10 +83,15 @@ const events = [
     }
 ];
 
-const seedDatabase = async () => {
+const seedDatabase = async (providedMongoose) => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora');
-        console.log('\n✅ MongoDB connection open...');
+        const isProgrammatic = !!providedMongoose;
+        if (!isProgrammatic) {
+            await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora');
+            console.log('\n✅ MongoDB connection open...');
+        } else {
+            console.log('\n✅ Running seed script programmatically...');
+        }
 
         await User.deleteMany();
         await Event.deleteMany();
@@ -165,11 +170,15 @@ const seedDatabase = async () => {
         console.log('Password for all users: password123');
         console.log('-------------------------------------------\n');
 
-        process.exit();
+        if (!isProgrammatic) process.exit();
     } catch (error) {
         console.error('❌ Error seeding data:', error);
-        process.exit(1);
+        if (!isProgrammatic) process.exit(1);
     }
 };
 
-seedDatabase();
+if (require.main === module) {
+    seedDatabase();
+}
+
+module.exports = seedDatabase;
