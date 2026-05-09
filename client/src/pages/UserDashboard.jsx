@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import api from '../utils/axios';
+import bookingService from '../services/bookingService';
 import { Link, useNavigate } from 'react-router-dom';
 import { Ticket, XCircle, Calendar, ArrowRight, ExternalLink } from 'lucide-react';
 
@@ -20,7 +20,7 @@ const UserDashboard = () => {
 
     const fetchBookings = async () => {
         try {
-            const { data } = await api.get('/bookings/my');
+            const data = await bookingService.getMine();
             setBookings(data);
         } catch (error) {
             console.error('Error fetching bookings', error);
@@ -32,7 +32,7 @@ const UserDashboard = () => {
     const cancelBooking = async (id) => {
         if (window.confirm('Are you sure you want to cancel this booking request?')) {
             try {
-                await api.delete(`/bookings/${id}`);
+                await bookingService.cancel(id);
                 fetchBookings();
             } catch (error) {
                 alert(error.response?.data?.message || 'Error cancelling booking');

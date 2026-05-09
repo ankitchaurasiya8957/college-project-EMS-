@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import api from '../utils/axios';
+import eventService from '../services/eventService';
+import bookingService from '../services/bookingService';
 import { AuthContext } from '../context/AuthContext';
 import { ArrowLeft, ArrowRight, Calendar, MapPin, Users, Ticket, Sparkles, Share2, Heart } from 'lucide-react';
 
@@ -19,7 +20,7 @@ const EventDetail = () => {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const { data } = await api.get(`/events/${id}`);
+                const data = await eventService.getById(id);
                 setEvent(data);
             } catch (err) {
                 setError('Failed to load event details.');
@@ -41,11 +42,11 @@ const EventDetail = () => {
 
         try {
             if (!showOTP) {
-                await api.post('/bookings/send-otp');
+                await bookingService.sendOTP();
                 setShowOTP(true);
                 setSuccessMsg('OTP sent to your email. Please verify to confirm booking.');
             } else {
-                await api.post('/bookings', { eventId: event._id, otp });
+                await bookingService.book(event._id, otp);
                 setSuccessMsg('Booking requested! Awaiting admin confirmation.');
                 setShowOTP(false);
                 setEvent({ ...event, availableSeats: event.availableSeats - 1 });

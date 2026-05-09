@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import api from '../utils/axios';
+import eventService from '../services/eventService';
+import bookingService from '../services/bookingService';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award } from 'lucide-react';
 import { CategoryPieChart, MonthlyBarChart, RevenueLineChart } from '../components/DashboardCharts';
@@ -31,6 +32,7 @@ const AdminDashboard = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [toast, setToast] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({ title: '', description: '', date: '', location: '', category: '', totalSeats: '', ticketPrice: '', image: '' });
 
   useEffect(() => { if (!user || user.role !== 'admin') { navigate('/login'); return; } fetchData(); }, [user, navigate]);
@@ -39,14 +41,15 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const eventsRes = await api.get('/events');
-      setEvents(Array.isArray(eventsRes.data) ? eventsRes.data : []);
+      const eventsData = await eventService.getAll();
+      setEvents(eventsData);
     } catch (error) {
       console.error('Error fetching events:', error);
+      showToast('Failed to load events from server', 'error');
     }
     try {
-      const bookingsRes = await api.get('/bookings/all');
-      setBookings(Array.isArray(bookingsRes.data) ? bookingsRes.data : []);
+      const bookingsData = await bookingService.getAll();
+      setBookings(bookingsData);
     } catch (error) {
       console.error('Error fetching bookings:', error);
     }
@@ -55,33 +58,64 @@ const AdminDashboard = () => {
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
-      await api.post('/events', { ...formData, totalSeats: Number(formData.totalSeats), ticketPrice: Number(formData.ticketPrice) || 0 });
+      const created = await eventService.create(formData);
       setShowEventForm(false);
       setFormData({ title: '', description: '', date: '', location: '', category: '', totalSeats: '', ticketPrice: '', image: '' });
-      showToast('Event created successfully!'); fetchData();
-    } catch (error) { showToast(error.response?.data?.message || 'Error creating event', 'error'); }
+      showToast(`Event "${created.title}" created successfully!`);
+      await fetchData(); // Re-fetch from MongoDB to ensure consistency
+    } catch (error) {
+      const errMsg = error.response?.data?.message || 'Error creating event. Check server connection.';
+      showToast(errMsg, 'error');
+      console.error('Create event error:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDeleteEvent = async (id) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
-      try { await api.delete(`/events/${id}`); showToast('Event deleted'); fetchData(); } catch { showToast('Error deleting event', 'error'); }
+      try {
+        await eventService.delete(id);
+        showToast('Event deleted');
+        await fetchData();
+      } catch (error) {
+        showToast(error.response?.data?.message || 'Error deleting event', 'error');
+      }
     }
   };
 
   const handleEditSave = async (id, data) => {
-    try { await api.put(`/events/${id}`, data); setEditEvent(null); showToast('Event updated successfully!'); fetchData(); }
-    catch { showToast('Error updating event', 'error'); }
+    try {
+      await eventService.update(id, data);
+      setEditEvent(null);
+      showToast('Event updated successfully!');
+      await fetchData();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Error updating event', 'error');
+    }
   };
 
   const handleConfirmBooking = async (id, paymentStatus) => {
-    try { await api.put(`/bookings/${id}/confirm`, { paymentStatus }); showToast('Booking confirmed'); fetchData(); }
-    catch (error) { showToast(error.response?.data?.message || 'Error confirming booking', 'error'); }
+    try {
+      await bookingService.confirm(id, paymentStatus);
+      showToast('Booking confirmed');
+      await fetchData();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Error confirming booking', 'error');
+    }
   };
 
   const handleCancelBooking = async (id) => {
     if (window.confirm("Cancel this user's booking request?")) {
-      try { await api.delete(`/bookings/${id}`); showToast('Booking cancelled'); fetchData(); } catch { showToast('Error cancelling booking', 'error'); }
+      try {
+        await bookingService.cancel(id);
+        showToast('Booking cancelled');
+        await fetchData();
+      } catch (error) {
+        showToast(error.response?.data?.message || 'Error cancelling booking', 'error');
+      }
     }
   };
 
@@ -321,7 +355,13 @@ const AdminDashboard = () => {
                 <div className="md:col-span-2"><label className="text-sm font-medium text-dark block mb-2">Description</label><textarea required placeholder="Describe the event..." className={`${inputCls} resize-none h-32`} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} /></div>
                 <div className="md:col-span-2 flex justify-end gap-3 mt-2">
                   <button type="button" onClick={() => setShowEventForm(false)} className="px-6 py-3.5 rounded-full font-medium text-sm text-dark hover:bg-black/5 transition-all">Cancel</button>
-                  <button type="submit" className="flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"><Sparkles size={16} />Publish Event</button>
+                  <button type="submit" disabled={submitting} className="flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {submitting ? (
+                      <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Publishing...</>
+                    ) : (
+                      <><Sparkles size={16} /> Publish Event</>
+                    )}
+                  </button>
                 </div>
               </form>
             </div>

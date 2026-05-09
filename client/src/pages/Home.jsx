@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ArrowRight, Calendar, MapPin, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft } from 'lucide-react';
-import api from '../utils/axios';
+import eventService from '../services/eventService';
 import EventCard from '../components/EventCard';
 
 function useInView(ref) {
@@ -107,7 +107,7 @@ const Home = () => {
 
     const fetchEvents = async () => {
         try {
-            const { data } = await api.get(`/events?search=${search}`);
+            const data = await eventService.getAll({ search });
             setEvents(data);
         } catch (error) {
             console.error('Error fetching events:', error);
