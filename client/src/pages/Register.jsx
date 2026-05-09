@@ -151,7 +151,7 @@ const Register = () => {
                           type="text"
                           required
                           placeholder="6-digit code"
-                          className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-black/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold tracking-widest text-center text-lg"
+                          className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-black/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold tracking-widest text-center"
                           value={otp}
                           onChange={(e) => setOtp(e.target.value)}
                           maxLength="6"
