@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import EventDetail from './pages/EventDetail';
+import Events from './pages/Events';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import UserDashboard from './pages/UserDashboard';
@@ -23,6 +24,7 @@ function App() {
                 <main className="flex-1">
                     <Routes>
                         <Route path="/" element={<Home />} />
+                        <Route path="/events" element={<Events />} />
                         <Route path="/events/:id" element={<EventDetail />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />

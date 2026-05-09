@@ -28,7 +28,7 @@ export default function Header() {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Events', path: '/#events' },
+    { name: 'Events', path: '/events' },
     ...(user
       ? [{ name: 'Dashboard', path: user.role === 'admin' ? '/admin' : '/dashboard' }]
       : []),
