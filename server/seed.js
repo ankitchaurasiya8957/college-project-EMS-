@@ -7,6 +7,9 @@ const Booking = require('./models/Booking');
 
 dotenv.config();
 
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']);
+
 const users = [
     { name: 'Admin User', email: 'admin@eventora.com', password: 'password123', role: 'admin' },
     { name: 'Demo User', email: 'user@eventora.com', password: 'password123', role: 'user' },
@@ -290,13 +293,16 @@ const seedDatabase = async (providedMongoose) => {
                 } else if (event.ticketPrice === 0) {
                     paymentStatus = 'paid';
                 }
+                const randomBookingId = `EVT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
                 bookingsData.push({
                     userId: user._id,
                     eventId: event._id,
+                    bookingId: randomBookingId,
                     status: status,
                     paymentStatus: paymentStatus,
-                    amount: event.ticketPrice
+                    amount: event.ticketPrice,
+                    bookingType: 'booking'
                 });
 
                 // Deduct available seats specifically for confirmed tickets!
