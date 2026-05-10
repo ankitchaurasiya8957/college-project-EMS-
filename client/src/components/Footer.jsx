@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
+import { EVENT_CATEGORIES } from '../utils/categories'
 
 function TwitterIcon() {
   return (
@@ -86,9 +87,15 @@ export default function Footer() {
           <div>
             <h4 className="font-heading font-semibold text-lg mb-6">Categories</h4>
             <ul className="space-y-4">
-              {['Tech Conferences', 'Music Festivals', 'Workshops', 'Networking', 'Sports', 'Community'].map((item) => (
-                <li key={item}>
-                  <span className="text-white/50 text-sm">{item}</span>
+              {EVENT_CATEGORIES.slice(0, 7).map((cat) => (
+                <li key={cat.value}>
+                  <Link
+                    to={`/events?category=${encodeURIComponent(cat.value)}`}
+                    className="text-white/50 hover:text-white transition-colors text-sm flex items-center gap-1 group"
+                  >
+                    {cat.shortLabel}
+                    <ArrowUpRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
                 </li>
               ))}
             </ul>

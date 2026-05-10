@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award, CreditCard, Eye, ArrowLeft, Ticket, Bell, MoreHorizontal, Settings, LayoutDashboard, User } from 'lucide-react';
 import { CategoryPieChart, MonthlyBarChart, RevenueLineChart } from '../components/DashboardCharts';
 import EditEventModal from '../components/EditEventModal';
+import { EVENT_CATEGORIES } from '../utils/categories';
 import './AdminDashboard.css';
 
 const ITEMS_PER_PAGE = 8;
@@ -845,7 +846,7 @@ const AdminDashboard = () => {
             </div>
             <form onSubmit={handleCreateEvent} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div><label className="text-sm font-bold text-gray-700 block mb-2">Event Title</label><input required type="text" placeholder="e.g., Tech Summit 2025" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} /></div>
-              <div><label className="text-sm font-bold text-gray-700 block mb-2">Category</label><input required type="text" placeholder="e.g., Tech, Music" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} /></div>
+              <div><label className="text-sm font-bold text-gray-700 block mb-2">Category</label><select required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}><option value="">Select Category</option>{EVENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select></div>
               <div><label className="text-sm font-bold text-gray-700 block mb-2">Date</label><input required type="date" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} /></div>
               <div><label className="text-sm font-bold text-gray-700 block mb-2">Location</label><input required type="text" placeholder="e.g., Mumbai" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} /></div>
               <div><label className="text-sm font-bold text-gray-700 block mb-2">Total Seats</label><input required type="number" placeholder="100" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all" value={formData.totalSeats} onChange={e => setFormData({ ...formData, totalSeats: e.target.value })} /></div>

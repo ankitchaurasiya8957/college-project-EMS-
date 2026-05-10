@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Calendar, MapPin, Users, ArrowRight } from 'lucide-react'
+import { getCategoryConfig } from '../utils/categories'
 
 export default function EventCard({ event, featured = false }) {
   const isFree = event.ticketPrice === 0
+  const catConfig = getCategoryConfig(event.category)
 
   return (
     <Link
@@ -47,7 +49,7 @@ export default function EventCard({ event, featured = false }) {
       <div className="p-5 bg-white">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: catConfig?.color || 'var(--color-primary)' }}>
               {event.category}
             </span>
             <h3 className="font-heading font-semibold text-lg text-dark leading-tight mt-1">
