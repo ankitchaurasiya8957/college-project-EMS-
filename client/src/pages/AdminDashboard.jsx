@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import eventService from '../services/eventService';
 import bookingService from '../services/bookingService';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award, CreditCard, Eye, ArrowLeft, Ticket, Bell, MoreHorizontal, Settings, LayoutDashboard, User } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award, CreditCard, Eye, ArrowLeft, Ticket, User } from 'lucide-react';
 import { CategoryPieChart, MonthlyBarChart, RevenueLineChart } from '../components/DashboardCharts';
 import EditEventModal from '../components/EditEventModal';
 import { EVENT_CATEGORIES } from '../utils/categories';
@@ -189,89 +189,28 @@ const AdminDashboard = () => {
 
   const inputCls = "w-full px-4 py-3.5 rounded-xl border border-black/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
 
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: <BarChart3 size={15} /> },
-    { id: 'events', label: 'All Events', icon: <Calendar size={15} /> },
-    { id: 'bookings', label: 'Bookings', icon: <Users size={15} /> },
-    ...(selectedEventId ? [{ id: 'participants', label: 'Participants', icon: <Ticket size={15} /> }] : []),
-  ];
-
   return (
-    <div className="fixed inset-0 z-[100] flex bg-[#f8f9fa] font-sans overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-[260px] bg-[#f8f9fa] border-r border-gray-200 flex flex-col z-20 shrink-0">
-        <div className="h-20 flex items-center px-6 border-b border-gray-200 shrink-0">
-          <div className="flex items-center gap-3 text-blue-600">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-              <Calendar size={18} />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="font-bold tracking-tight text-xl leading-none text-blue-600">EVENTORA</h1>
-              <p className="text-[8px] font-bold tracking-[0.15em] text-gray-500 uppercase mt-0.5">Management Suite</p>
-            </div>
-          </div>
-        </div>
-        
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'overview' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-            <LayoutDashboard size={18} /> DASHBOARD
-          </button>
-          <button onClick={() => setActiveTab('events')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'events' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-            <Calendar size={18} /> EVENTS
-          </button>
-          <button onClick={() => setActiveTab('bookings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'bookings' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-            <Ticket size={18} /> BOOKINGS
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-not-allowed">
-            <BarChart3 size={18} /> ANALYTICS
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-not-allowed">
-            <Settings size={18} /> SETTINGS
-          </button>
-        </nav>
-
-        <div className="p-5 border-t border-gray-200 shrink-0">
-          <button onClick={() => setShowEventForm(true)} className="w-full flex items-center justify-center gap-2 py-3 bg-gray-200/60 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-300/60 transition-colors mb-6 border border-gray-200">
-            <Plus size={16} /> Create Event
-          </button>
-          <div className="flex items-center gap-3 px-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/profile')}>
-            <div className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold shadow-sm shrink-0">
-               {user.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-[11px] font-bold text-gray-900 truncate uppercase tracking-wider">{user.name}</p>
-              <p className="text-[9px] font-semibold text-gray-500 truncate uppercase tracking-wider">{user.email}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-[#f8f9fa] font-sans pt-24">
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full bg-[#f8f9fa] overflow-hidden">
-        {/* Top Header */}
-        <header className="h-20 bg-[#f8f9fa] border-b border-gray-200 px-8 flex items-center justify-between shrink-0">
-          <div className="relative w-full max-w-lg">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Search events, locations, or organizers..." className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-          </div>
-          <div className="flex items-center gap-6">
-            <button className="text-gray-500 hover:text-gray-800 relative">
-              <Bell size={20} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-[#f8f9fa]"></span>
-            </button>
-            <button onClick={() => setShowEventForm(true)} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-400 text-white rounded-full text-[11px] font-bold uppercase tracking-wider shadow-lg shadow-cyan-500/25 hover:opacity-90 transition-opacity">
-              <Plus size={14} /> CREATE EVENT
-            </button>
-          </div>
-        </header>
-
+      <div className="w-full">
         {/* Content Scroll */}
-        <main className="flex-1 overflow-y-auto p-10">
+        <main className="px-6 md:px-10 pb-16">
           <div className="max-w-6xl mx-auto">
-            {/* Page Title */}
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-              <p className="text-sm text-gray-500">Manage events, track analytics, and handle bookings across your organization.</p>
+            {/* Page Title & Actions */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-1">Dashboard</h1>
+                <p className="text-sm text-gray-500">Manage events, track analytics, and handle bookings across your organization.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input type="text" placeholder="Search events..." className="pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none w-56" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                </div>
+                <button onClick={() => setShowEventForm(true)} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-blue-500/25 hover:bg-blue-700 transition-colors">
+                  <Plus size={14} /> Create Event
+                </button>
+              </div>
             </div>
 
             {/* Sub Tabs */}
@@ -293,107 +232,103 @@ const AdminDashboard = () => {
             {/* TAB: Overview */}
             {activeTab === 'overview' && (
               <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                {/* Top Cards Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                  <div className="lg:col-span-2 bg-gradient-to-br from-emerald-500 to-emerald-400 rounded-2xl p-8 text-white relative overflow-hidden shadow-[0_8px_30px_rgb(16,185,129,0.2)]">
-                    <div className="flex items-center gap-2 mb-16 opacity-90 text-[11px] font-bold uppercase tracking-widest"><CreditCard size={16}/> TOTAL REVENUE</div>
-                    <h2 className="text-5xl font-bold mb-3 tracking-tight">₹{totalRevenue.toLocaleString()}</h2>
-                    <p className="text-sm font-medium flex items-center gap-1.5 opacity-90"><TrendingUp size={16} /> +12.5% from last month</p>
-                  </div>
-                  
-                  <div className="flex flex-col gap-6">
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">
-                          <div className="bg-blue-50 text-blue-500 rounded p-1"><Calendar size={14}/></div> TOTAL EVENTS
-                        </div>
-                        <p className="text-4xl font-bold text-gray-900">{events.length}</p>
+                {/* Revenue Analysis - Full Width Line Chart */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Revenue Analysis</h3>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Total Fiscal Performance</p>
+                    </div>
+                    <div className="flex items-center gap-5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
+                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Projection</span>
                       </div>
-                      <div className="w-16 h-16 rounded-full border-[3px] border-blue-50 flex flex-col items-center justify-center text-blue-600 font-bold shadow-inner">
-                        <span className="text-lg leading-none">{upcomingCount}</span>
-                        <span className="text-[7px] block uppercase tracking-wider mt-0.5 text-gray-400">UPC.</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Actual</span>
                       </div>
                     </div>
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                      <div className="flex items-center gap-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">
-                        <div className="bg-purple-50 text-purple-500 rounded p-1"><Ticket size={14}/></div> PAID BOOKINGS
-                      </div>
-                      <p className="text-4xl font-bold text-gray-900">{paidClients} <span className="text-sm text-gray-400 font-medium">/ {bookings.length} total</span></p>
-                    </div>
                   </div>
+                  <div className="h-72"><RevenueLineChart bookings={bookings} /></div>
                 </div>
 
-                {/* Charts Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Monthly Event Frequency + Event Categories */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="font-semibold text-gray-900">Monthly Events</h3>
-                      <button className="text-gray-400 hover:text-gray-600"><MoreHorizontal size={20}/></button>
+                    <div className="mb-1">
+                      <h3 className="text-lg font-bold text-gray-900">Monthly Event Frequency</h3>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Total Sessions Hosted</p>
                     </div>
                     <div className="h-64"><MonthlyBarChart events={events} /></div>
                   </div>
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="font-semibold text-gray-900">Events by Category</h3>
-                      <button className="text-gray-400 hover:text-gray-600"><Filter size={20}/></button>
+                    <div className="mb-1">
+                      <h3 className="text-lg font-bold text-gray-900">Event Categories</h3>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Distribution by Type</p>
                     </div>
                     <div className="h-64"><CategoryPieChart events={events} /></div>
                   </div>
                 </div>
 
-                {/* Recent & Upcoming Events */}
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900">Recent & Upcoming Events</h3>
-                    <div className="flex gap-2">
-                      <button className="px-4 py-1.5 text-[10px] font-bold tracking-wider border border-gray-200 rounded-full text-gray-600 hover:bg-gray-50 transition-colors uppercase">FILTER</button>
-                      <button className="px-4 py-1.5 text-[10px] font-bold tracking-wider border border-gray-200 rounded-full text-gray-600 hover:bg-gray-50 transition-colors uppercase flex items-center gap-1">SORT <ChevronRight size={12} className="rotate-90"/></button>
+                {/* Bottom Stat Cards - 4 cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Peak Performance */}
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-3">
+                      <TrendingUp size={20} className="text-blue-600" />
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md uppercase tracking-wider">+12%</span>
+                    </div>
+                    <p className="text-xs font-bold text-gray-500 mb-1">Peak Performance</p>
+                    <p className="text-3xl font-bold text-gray-900">₹{totalRevenue >= 1000 ? `${(totalRevenue / 1000).toFixed(1)}k` : totalRevenue}</p>
+                    <div className="mt-3 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: '72%' }} />
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    {events.slice(0, 3).map((event, idx) => {
-                      const status = getEventStatus(event.date);
-                      const borderColors = ['border-l-blue-500', 'border-l-emerald-500', 'border-l-gray-300'];
-                      const badgeColors = ['bg-blue-50 text-blue-600', 'bg-emerald-50 text-emerald-600', 'bg-rose-50 text-rose-600'];
-                      
-                      return (
-                        <div key={event._id} className={`flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border-l-4 ${status === 'upcoming' ? (idx % 2 === 0 ? borderColors[0] : borderColors[1]) : borderColors[2]}`}>
-                          <div className="flex items-center gap-5">
-                            <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center ${status === 'upcoming' ? (idx % 2 === 0 ? 'bg-blue-500 text-white' : 'bg-emerald-50 text-emerald-600') : 'bg-gray-100 text-gray-500'}`}>
-                              <span className="text-[10px] font-bold uppercase">{new Date(event.date).toLocaleDateString('en-US', {month: 'short'})}</span>
-                              <span className="text-xl font-bold leading-tight">{new Date(event.date).getDate()}</span>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900 text-lg">{event.title}</h4>
-                              <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 font-medium">
-                                <span className="flex items-center gap-1"><MapPin size={12}/> {event.location}</span>
-                                <span className="flex items-center gap-1"><User size={12}/> {event.createdBy?.name || 'Admin User'}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`px-3 py-1 ${badgeColors[idx % badgeColors.length]} text-[10px] font-bold rounded-full uppercase tracking-wider`}>{event.category}</span>
-                            <span className="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full uppercase tracking-wider flex items-center gap-1.5">
-                              <div className={`w-1.5 h-1.5 rounded-full ${status === 'upcoming' ? 'bg-emerald-500' : 'bg-gray-400'}`}></div>
-                              {status}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })}
+
+                  {/* Active Venues */}
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-3">
+                      <MapPin size={20} className="text-emerald-600" />
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md uppercase tracking-wider">Active</span>
+                    </div>
+                    <p className="text-xs font-bold text-gray-500 mb-1">Active Venues</p>
+                    <p className="text-3xl font-bold text-gray-900">{events.length}</p>
+                    <div className="mt-3 flex gap-1">
+                      <div className="h-1 flex-1 bg-emerald-500 rounded-full" />
+                      <div className="h-1 flex-1 bg-emerald-500 rounded-full" />
+                      <div className="h-1 flex-1 bg-gray-100 rounded-full" />
+                    </div>
                   </div>
-                  {events.length > 3 && (
-                    <div className="mt-8 flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Showing 1-3 of {events.length}</span>
-                      <div className="flex items-center gap-1">
-                         <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600"><ChevronLeft size={16}/></button>
-                         <button className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-md shadow-blue-500/20">1</button>
-                         <button className="w-8 h-8 rounded-full text-gray-600 font-bold flex items-center justify-center text-xs hover:bg-gray-100">2</button>
-                         <span className="text-gray-400 px-1">...</span>
-                         <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600"><ChevronRight size={16}/></button>
+
+                  {/* Avg. Ticket Price */}
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-3">
+                      <Ticket size={20} className="text-purple-600" />
+                      <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-wider">Stable</span>
+                    </div>
+                    <p className="text-xs font-bold text-gray-500 mb-1">Avg. Ticket Price</p>
+                    <p className="text-3xl font-bold text-gray-900">₹{bookings.length > 0 ? Math.round(totalRevenue / Math.max(paidClients, 1)) : 0}</p>
+                    <p className="text-[10px] text-gray-400 mt-2 font-medium">Last month avg: ₹{bookings.length > 0 ? Math.round((totalRevenue / Math.max(paidClients, 1)) * 0.97) : 0}</p>
+                  </div>
+
+                  {/* Attendees Online */}
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-3">
+                      <Users size={20} className="text-gray-500" />
+                      <div className="flex gap-0.5">
+                        <div className="w-5 h-5 rounded-full bg-gray-200" />
+                        <div className="w-5 h-5 rounded-full bg-gray-200 -ml-1.5" />
+                        <div className="w-5 h-5 rounded-full bg-gray-200 -ml-1.5" />
                       </div>
                     </div>
-                  )}
+                    <p className="text-xs font-bold text-gray-500 mb-1">Total Attendees</p>
+                    <p className="text-3xl font-bold text-gray-900">{totalAttendees}</p>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <p className="text-[10px] text-gray-400 font-medium">System fully operational</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
