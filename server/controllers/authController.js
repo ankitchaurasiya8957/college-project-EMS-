@@ -36,11 +36,13 @@ const findValidOTP = async (email, otp, action) => {
 
 exports.register = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        let { name, email, password } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Please provide name, email and password' });
         }
+        
+        email = email.trim();
 
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ message: 'User already exists' });
@@ -76,17 +78,25 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        let { email, password } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({ message: 'Please provide email and password' });
         }
-
+        
+        email = email.trim();
+        
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+        if (!user) {
+            console.log(`❌ Login failed: Email not found (${email})`);
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+        if (!isMatch) {
+            console.log(`❌ Login failed: Incorrect password for (${email})`);
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
 
         if (!user.isVerified && user.role !== 'admin') {
             // Re-send OTP for unverified users
@@ -195,6 +205,7 @@ exports.forgotPassword = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
+            console.log(`⚠️  Forgot Password requested for non-existent email: ${email}. To prevent enumeration, pretending it sent.`);
             // Security: Don't reveal whether email exists
             return res.json({ message: 'If an account with that email exists, an OTP has been sent.' });
         }
