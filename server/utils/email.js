@@ -16,17 +16,35 @@ const isEmailConfigured = () => {
 let transporter = null;
 if (isEmailConfigured()) {
     transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,          // false = STARTTLS (upgraded connection on port 587)
+        requireTLS: true,       // Force TLS upgrade — required by Gmail
         auth: {
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
+            pass: process.env.EMAIL_PASS  // Must be a Gmail App Password (16 chars), NOT your Gmail login password
         },
-        connectionTimeout: 5000,  // 5 second connection timeout
-        greetingTimeout: 5000,    // 5 second greeting timeout
-        socketTimeout: 5000,      // 5 second socket timeout
-        pool: true,               // Use pooled connections for speed
-        maxConnections: 3,
+        connectionTimeout: 10000,   // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+        tls: {
+            rejectUnauthorized: false   // Prevents self-signed cert errors
+        }
     });
+
+    // Verify transporter config at startup so errors surface immediately
+    transporter.verify((error) => {
+        if (error) {
+            console.error('❌ Email transporter verification FAILED:', error.message);
+            console.error('   Check that EMAIL_USER and EMAIL_PASS are correct in .env');
+            console.error('   EMAIL_PASS must be a Gmail App Password (not your Gmail login password)');
+            console.error('   Generate one at: https://myaccount.google.com/apppasswords');
+            transporter = null; // Fall back to console logging
+        } else {
+            console.log('✅ Email transporter ready — emails will be sent via:', process.env.EMAIL_USER);
+        }
+    });
+
     console.log('📧 Email transporter configured for:', process.env.EMAIL_USER);
 } else {
     console.warn('⚠️  Email not configured. OTPs will be logged to console instead of emailed.');
