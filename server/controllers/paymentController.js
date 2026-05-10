@@ -135,6 +135,49 @@ exports.createOrder = async (req, res) => {
 };
 
 /**
+ * POST /api/payments/upi-qr
+ * Generates a UPI payment intent string for QR code display.
+ * Body: { orderId, amount }
+ */
+exports.generateUpiQr = async (req, res) => {
+    try {
+        const { orderId, amount } = req.body;
+
+        if (!orderId || !amount) {
+            return res.status(400).json({ message: 'Order ID and amount are required' });
+        }
+
+        // Verify the order exists in our records
+        const payment = await Payment.findOne({ razorpayOrderId: orderId, userId: req.user.id });
+        if (!payment) {
+            return res.status(404).json({ message: 'Payment order not found' });
+        }
+
+        // Build UPI intent string (standard UPI deep-link format)
+        const upiId = process.env.UPI_MERCHANT_ID || 'eventora@razorpay';
+        const merchantName = 'Eventora';
+        const amountInRupees = (amount / 100).toFixed(2);
+        const txnRef = payment.transactionId;
+
+        const upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(merchantName)}&am=${amountInRupees}&cu=INR&tn=${encodeURIComponent('Eventora-' + txnRef)}&tr=${encodeURIComponent(txnRef)}`;
+
+        console.log(`📱 UPI QR generated for order: ${orderId}`);
+
+        res.json({
+            upiString,
+            upiId,
+            merchantName,
+            amount: amountInRupees,
+            transactionRef: txnRef,
+            orderId,
+        });
+    } catch (error) {
+        console.error('❌ Error generating UPI QR:', error.message);
+        res.status(500).json({ message: 'Failed to generate UPI QR', error: error.message });
+    }
+};
+
+/**
  * POST /api/payments/verify
  * Verifies Razorpay payment signature, creates booking on success.
  * Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingType }

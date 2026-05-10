@@ -23,6 +23,14 @@ const paymentService = {
     },
 
     /**
+     * Generate UPI QR code data for an order.
+     */
+    generateUpiQr: async (orderId, amount) => {
+        const { data } = await api.post('/payments/upi-qr', { orderId, amount });
+        return data;
+    },
+
+    /**
      * Get current user's payment history.
      */
     getMyPayments: async () => {
