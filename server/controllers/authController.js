@@ -105,6 +105,7 @@ exports.login = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            profilePhoto: user.profilePhoto,
             token: generateToken(user.id, user.role)
         });
     } catch (error) {
@@ -144,6 +145,7 @@ exports.verifyOTP = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            profilePhoto: user.profilePhoto,
             token: generateToken(user.id, user.role)
         });
     } catch (error) {
@@ -308,9 +310,13 @@ exports.updateProfile = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { name } = req.body;
+        const { name, profilePhoto } = req.body;
         if (name) {
             user.name = name;
+        }
+        if (profilePhoto !== undefined) {
+            // profilePhoto can be a base64 data URL or null (to remove)
+            user.profilePhoto = profilePhoto;
         }
         
         const updatedUser = await user.save();
@@ -320,6 +326,7 @@ exports.updateProfile = async (req, res) => {
             name: updatedUser.name,
             email: updatedUser.email,
             role: updatedUser.role,
+            profilePhoto: updatedUser.profilePhoto,
             token: generateToken(updatedUser.id, updatedUser.role)
         });
     } catch (error) {
