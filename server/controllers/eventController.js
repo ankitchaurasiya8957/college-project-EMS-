@@ -1,104 +1,102 @@
 const Event = require('../models/Event');
+const asyncHandler = require('../utils/asyncHandler');
+const ErrorResponse = require('../utils/ErrorResponse');
 
-exports.getEvents = async (req, res) => {
-    try {
-        const filters = {};
-        if (req.query.category) filters.category = req.query.category;
-        if (req.query.search) filters.title = { $regex: req.query.search, $options: 'i' };
+/**
+ * GET /api/events
+ * Get all events with optional search and category filter
+ */
+exports.getEvents = asyncHandler(async (req, res, next) => {
+    const filters = {};
+    if (req.query.category) filters.category = req.query.category;
+    if (req.query.search) filters.title = { $regex: req.query.search, $options: 'i' };
 
-        const events = await Event.find(filters).populate('createdBy', 'name email');
-        res.json(events);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+    const events = await Event.find(filters).populate('createdBy', 'name email');
+    res.json(events);
+});
+
+/**
+ * GET /api/events/:id
+ * Get a single event by ID
+ */
+exports.getEventById = asyncHandler(async (req, res, next) => {
+    const event = await Event.findById(req.params.id).populate('createdBy', 'name email');
+    if (!event) {
+        return next(new ErrorResponse('Event not found', 404));
     }
-};
+    res.json(event);
+});
 
-exports.getEventById = async (req, res) => {
-    try {
-        const event = await Event.findById(req.params.id).populate('createdBy', 'name email');
-        if (!event) return res.status(404).json({ message: 'Event not found' });
-        res.json(event);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+/**
+ * POST /api/events
+ * Admin: Create a new event
+ */
+exports.createEvent = asyncHandler(async (req, res, next) => {
+    const { title, description, date, location, category, totalSeats, ticketPrice, image } = req.body;
+
+    const parsedSeats = parseInt(totalSeats);
+    const parsedPrice = parseFloat(ticketPrice) || 0;
+
+    const event = await Event.create({
+        title,
+        description,
+        date: new Date(date),
+        location,
+        category,
+        totalSeats: parsedSeats,
+        availableSeats: parsedSeats,
+        ticketPrice: parsedPrice,
+        image: image || '',
+        createdBy: req.user.id
+    });
+
+    console.log('✅ Event created:', event.title);
+    res.status(201).json(event);
+});
+
+/**
+ * PUT /api/events/:id
+ * Admin: Update an existing event
+ */
+exports.updateEvent = asyncHandler(async (req, res, next) => {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+        return next(new ErrorResponse('Event not found', 404));
     }
-};
 
-exports.createEvent = async (req, res) => {
-    try {
-        const { title, description, date, location, category, totalSeats, ticketPrice, image } = req.body;
+    Object.assign(event, req.body);
 
-        // Validate required fields
-        if (!title || !description || !date || !location || !category || !totalSeats) {
-            return res.status(400).json({ message: 'Please provide all required fields: title, description, date, location, category, totalSeats' });
-        }
+    // If totalSeats is being updated, automatically recalculate availableSeats accurately
+    if (req.body.totalSeats !== undefined) {
+        const newTotalSeats = parseInt(req.body.totalSeats);
+        if (!isNaN(newTotalSeats)) {
+            const Booking = require('../models/Booking');
+            const bookedCount = await Booking.countDocuments({
+                eventId: event._id,
+                status: 'confirmed'
+            });
 
-        const parsedSeats = parseInt(totalSeats);
-        const parsedPrice = parseFloat(ticketPrice) || 0;
+            event.availableSeats = newTotalSeats - bookedCount;
 
-        if (isNaN(parsedSeats) || parsedSeats <= 0) {
-            return res.status(400).json({ message: 'Total seats must be a positive number' });
-        }
-
-        const event = await Event.create({
-            title,
-            description,
-            date: new Date(date),
-            location,
-            category,
-            totalSeats: parsedSeats,
-            availableSeats: parsedSeats,
-            ticketPrice: parsedPrice,
-            image: image || '',
-            createdBy: req.user.id
-        });
-
-        console.log('✅ Event created:', event.title);
-        res.status(201).json(event);
-    } catch (error) {
-        console.error('❌ Error creating event:', error.message);
-        res.status(500).json({ message: 'Server Error', error: error.message });
-    }
-};
-
-exports.updateEvent = async (req, res) => {
-    try {
-        const event = await Event.findById(req.params.id);
-        if (!event) return res.status(404).json({ message: 'Event not found' });
-
-        Object.assign(event, req.body);
-
-        // If totalSeats is being updated, automatically recalculate availableSeats accurately
-        if (req.body.totalSeats !== undefined) {
-            const newTotalSeats = parseInt(req.body.totalSeats);
-            if (!isNaN(newTotalSeats)) {
-                const Booking = require('../models/Booking');
-                const bookedCount = await Booking.countDocuments({ 
-                    eventId: event._id, 
-                    status: 'confirmed' 
-                });
-                
-                event.availableSeats = newTotalSeats - bookedCount;
-                
-                // Prevent availableSeats from becoming negative
-                if (event.availableSeats < 0) {
-                    event.availableSeats = 0;
-                }
+            // Prevent availableSeats from becoming negative
+            if (event.availableSeats < 0) {
+                event.availableSeats = 0;
             }
         }
-
-        const updatedEvent = await event.save();
-        res.json(updatedEvent);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
     }
-};
 
-exports.deleteEvent = async (req, res) => {
-    try {
-        const event = await Event.findByIdAndDelete(req.params.id);
-        if (!event) return res.status(404).json({ message: 'Event not found' });
-        res.json({ message: 'Event deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+    const updatedEvent = await event.save();
+    res.json(updatedEvent);
+});
+
+/**
+ * DELETE /api/events/:id
+ * Admin: Delete an event
+ */
+exports.deleteEvent = asyncHandler(async (req, res, next) => {
+    const event = await Event.findByIdAndDelete(req.params.id);
+    if (!event) {
+        return next(new ErrorResponse('Event not found', 404));
     }
-};
+    res.json({ success: true, message: 'Event deleted successfully' });
+});

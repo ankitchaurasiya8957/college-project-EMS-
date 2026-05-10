@@ -10,11 +10,12 @@ const {
     getPaymentAnalytics
 } = require('../controllers/paymentController');
 const { protect, admin } = require('../middleware/auth');
+const validate = require('../middleware/validators');
 
 // ── User Routes ──
-router.post('/create-order', protect, createOrder);
-router.post('/upi-qr', protect, generateUpiQr);
-router.post('/verify', protect, verifyPayment);
+router.post('/create-order', protect, validate.createOrder, createOrder);
+router.post('/upi-qr', protect, validate.generateUpiQr, generateUpiQr);
+router.post('/verify', protect, validate.verifyPayment, verifyPayment);
 router.get('/my', protect, getMyPayments);
 
 // ── Admin Routes ──

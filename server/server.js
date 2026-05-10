@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dns = require('dns');
 const dotenv = require('dotenv');
+const errorHandler = require('./middleware/errorMiddleware');
 
 dotenv.config();
 
@@ -22,6 +23,9 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/payments', require('./routes/payments'));
+
+// ── Global Error Handler (must be AFTER all routes) ──
+app.use(errorHandler);
 
 // ── Health Check ──
 app.get('/api/health', (req, res) => {
