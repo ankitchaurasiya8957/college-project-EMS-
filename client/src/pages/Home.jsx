@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft, Share2, Copy } from 'lucide-react';
+import { ArrowRight, Calendar, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft, Share2, Copy, Briefcase, GraduationCap, Music, Palette, Trophy, Gamepad2, Heart, Flame, Handshake, Megaphone, Leaf, Star, Monitor, ChevronRight } from 'lucide-react';
 import eventService from '../services/eventService';
+import { EVENT_CATEGORIES, getCategoryConfig } from '../utils/categories';
 
 
 function useInView(ref) {
@@ -284,6 +285,77 @@ const Home = () => {
               </div>
             </div>
           </section>
+
+          {/* ==================== BROWSE BY CATEGORY ==================== */}
+          <AnimatedSection>
+            <section className="py-20 lg:py-28 bg-white overflow-hidden">
+              <div className="max-w-6xl mx-auto px-6 md:px-12">
+                {/* Section Header */}
+                <div className="flex items-end justify-between mb-12">
+                  <div>
+                    <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-3">Explore Categories</p>
+                    <h2 className="font-heading text-3xl md:text-4xl lg:text-[2.75rem] font-semibold text-dark leading-tight tracking-tight">
+                      Browse by Category
+                    </h2>
+                    <p className="text-black/50 text-base mt-3 max-w-xl leading-relaxed">
+                      From corporate summits to music festivals — find your next experience across 14 curated event types.
+                    </p>
+                  </div>
+                  <Link
+                    to="/events"
+                    className="hidden md:inline-flex items-center gap-2 px-6 py-3 border border-black/10 text-dark rounded-full font-semibold text-sm hover:bg-black/5 transition-all duration-200 shrink-0"
+                  >
+                    View All <ChevronRight size={16} />
+                  </Link>
+                </div>
+
+                {/* Category Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {EVENT_CATEGORIES.map((cat, i) => {
+                    const iconMap = { Briefcase, GraduationCap, Music, Palette, Trophy, Gamepad2, Users, Heart, Flame, Handshake, Megaphone, Leaf, Star, Monitor };
+                    const IconComponent = iconMap[cat.icon] || Calendar;
+                    const eventCount = events.filter(e => e.category === cat.value).length;
+                    return (
+                      <Link
+                        key={cat.value}
+                        to={`/events?category=${encodeURIComponent(cat.value)}`}
+                        className="group relative p-5 rounded-2xl border border-black/5 hover:border-transparent hover:shadow-xl transition-all duration-300 overflow-hidden text-center"
+                        style={{ animationDelay: `${i * 50}ms` }}
+                      >
+                        {/* Hover gradient background */}
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+                          style={{ background: `linear-gradient(135deg, ${cat.bgColor}, white)` }}
+                        />
+                        <div className="relative z-10">
+                          <div
+                            className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:scale-110"
+                            style={{ backgroundColor: cat.bgColor, color: cat.color }}
+                          >
+                            <IconComponent size={22} />
+                          </div>
+                          <h3 className="font-heading font-semibold text-sm text-dark leading-snug">{cat.shortLabel}</h3>
+                          <p className="text-[11px] text-black/40 mt-1 font-medium">
+                            {eventCount > 0 ? `${eventCount} event${eventCount > 1 ? 's' : ''}` : 'Coming soon'}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Mobile CTA */}
+                <div className="mt-8 text-center md:hidden">
+                  <Link
+                    to="/events"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-full font-semibold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                  >
+                    Browse All Events <ArrowRight size={16} />
+                  </Link>
+                </div>
+              </div>
+            </section>
+          </AnimatedSection>
 
           {/* ==================== WHY CHOOSE US ==================== */}
           <AnimatedSection>

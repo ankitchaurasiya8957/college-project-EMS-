@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Users, CalendarDays, IndianRupee } from 'lucide-react';
+import { EVENT_CATEGORIES } from '../utils/categories';
 
 export default function EditEventModal({ event, eventBookings = [], onClose, onSave }) {
   const [form, setForm] = useState({
@@ -82,7 +83,7 @@ export default function EditEventModal({ event, eventBookings = [], onClose, onS
               </div>
               <div>
                 <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Category</label>
-                <input required className={inputCls} value={form.category} onChange={e => set('category', e.target.value)} />
+                <select required className={inputCls} value={form.category} onChange={e => set('category', e.target.value)}><option value="">Select Category</option>{EVENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select>
               </div>
               <div>
                 <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Date</label>

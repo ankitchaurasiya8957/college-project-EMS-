@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Calendar, MapPin, Users, Filter, ChevronLeft, ChevronRight, SlidersHorizontal, LayoutGrid, List, ArrowUpDown, X, Ticket } from 'lucide-react';
 import eventService from '../services/eventService';
 import EventCard from '../components/EventCard';
+import { EVENT_CATEGORIES } from '../utils/categories';
 
 const ITEMS_PER_PAGE = 9;
 
 const Events = () => {
+  const [searchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('category') || 'all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(!!searchParams.get('category'));
 
   useEffect(() => {
     fetchEvents();
@@ -44,10 +46,8 @@ const Events = () => {
   };
 
   // Extract unique categories
-  const categories = useMemo(() => {
-    const cats = [...new Set(events.map(e => e.category).filter(Boolean))];
-    return cats.sort();
-  }, [events]);
+  // Use the official category list for filters
+  const categories = EVENT_CATEGORIES.map(c => c.value);
 
   // Filtered & sorted events
   const filteredEvents = useMemo(() => {
@@ -250,7 +250,7 @@ const Events = () => {
                 className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
               >
                 <option value="all">All Categories</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                {EVENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
 
               <select
