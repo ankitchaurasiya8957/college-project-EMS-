@@ -244,10 +244,6 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-5">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
-                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Projection</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
                         <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Actual</span>
                       </div>

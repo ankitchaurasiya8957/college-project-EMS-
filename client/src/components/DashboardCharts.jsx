@@ -99,23 +99,13 @@ export function RevenueLineChart({ bookings, events }) {
       })
       .reduce((s, b) => s + (Number(b.amount) || 0), 0);
 
-    // Projection: based on event ticket prices × total seats for events in this month
-    // This gives a "maximum potential revenue" projection
-    const projection = (events || [])
-      .filter(e => new Date(e.date).getMonth() === i)
-      .reduce((s, e) => s + ((Number(e.ticketPrice) || 0) * (Number(e.totalSeats) || 0)), 0);
-
-    return { name, actual, projection: Math.round(projection * 0.4) }; // 40% target fill rate
+    return { name, actual };
   });
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data}>
         <defs>
-          <linearGradient id="colorProjection" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-          </linearGradient>
           <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
             <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
@@ -125,16 +115,6 @@ export function RevenueLineChart({ bookings, events }) {
         <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#999' }} axisLine={false} tickLine={false} />
         <YAxis tick={{ fontSize: 11, fill: '#999' }} axisLine={false} tickLine={false} />
         <Tooltip content={<CustomTooltip />} />
-        <Area
-          type="monotone"
-          dataKey="projection"
-          stroke="#3b82f6"
-          strokeWidth={2}
-          fill="url(#colorProjection)"
-          strokeDasharray="6 3"
-          dot={false}
-          name="Projection"
-        />
         <Area
           type="monotone"
           dataKey="actual"
