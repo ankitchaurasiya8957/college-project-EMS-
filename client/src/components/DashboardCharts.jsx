@@ -9,7 +9,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     <div style={{ background: '#fff', borderRadius: 12, padding: '12px 16px', boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.06)' }}>
       <p style={{ fontSize: 12, fontWeight: 700, color: '#172023', marginBottom: 6, marginTop: 0 }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ fontSize: 12, color: p.color || p.stroke, margin: '2px 0', fontWeight: 500 }}>
+        <p key={i} style={{ fontSize: 12, color: p.color || p.stroke || '#666', margin: '2px 0', fontWeight: 500 }}>
           {p.name}: {typeof p.value === 'number' ? `₹${p.value.toLocaleString('en-IN')}` : p.value}
         </p>
       ))}
@@ -23,7 +23,7 @@ const SimpleTooltip = ({ active, payload, label }) => {
     <div style={{ background: '#fff', borderRadius: 12, padding: '12px 16px', boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.06)' }}>
       <p style={{ fontSize: 12, fontWeight: 700, color: '#172023', marginBottom: 6, marginTop: 0 }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ fontSize: 12, color: p.color || p.fill, margin: '2px 0', fontWeight: 500 }}>
+        <p key={i} style={{ fontSize: 12, color: p.color || p.fill || '#666', margin: '2px 0', fontWeight: 500 }}>
           {p.name}: {p.value}
         </p>
       ))}

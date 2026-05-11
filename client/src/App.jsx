@@ -16,6 +16,7 @@ import Contact from './pages/Contact';
 import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
     return (
@@ -24,18 +25,21 @@ function App() {
                 <Navbar />
                 <main className="flex-1">
                     <Routes>
-                        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                        <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                        <Route path="/events/:id" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
+                        {/* BUG-10 FIX: Public routes — no login required */}
+                        <Route path="/" element={<Home />} />
+                        <Route path="/events" element={<Events />} />
+                        <Route path="/events/:id" element={<EventDetail />} />
+                        <Route path="/contact" element={<Contact />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
+                        {/* Protected routes — login required */}
                         <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-                        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-                        <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
                         <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
                         <Route path="/payment-failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
+                        {/* BUG-9 FIX: Admin route — login + admin role required */}
+                        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </main>

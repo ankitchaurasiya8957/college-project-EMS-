@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft, Share2, Copy, Briefcase, GraduationCap, Music, Palette, Trophy, Gamepad2, Heart, Flame, Handshake, Megaphone, Leaf, Star, Monitor, ChevronRight } from 'lucide-react';
 import eventService from '../services/eventService';
@@ -92,12 +92,20 @@ const Home = () => {
     const finalSlides = slideEvents.length > 0 ? slideEvents : defaultSlides;
     const currentSlideData = finalSlides.length > 0 ? finalSlides[currentSlide % finalSlides.length] : defaultSlides[0];
 
+    // BUG-13 FIX: Use ref for slide count so interval callback always sees latest value
+    const slidesCountRef = useRef(finalSlides.length);
+    useEffect(() => {
+        slidesCountRef.current = finalSlides.length;
+        // Bound currentSlide if slides array shrank
+        setCurrentSlide(prev => prev >= finalSlides.length ? 0 : prev);
+    }, [finalSlides.length]);
+
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % finalSlides.length);
+            setCurrentSlide(prev => (prev + 1) % slidesCountRef.current);
         }, 7000);
         return () => clearInterval(timer);
-    }, [finalSlides.length]);
+    }, []); // Only created once — no interval leak
 
     useEffect(() => {
         fetchEvents();

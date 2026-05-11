@@ -67,6 +67,19 @@ const UserDashboard = () => {
         cancelled: { icon: Ban, color: 'red', label: 'Cancelled' },
     };
 
+    // BUG-8 FIX: Static class mappings so Tailwind purge detects them at build time
+    const colorClasses = {
+        blue: { text: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200', borderL: 'border-l-blue-400' },
+        emerald: { text: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200', borderL: 'border-l-emerald-400' },
+        amber: { text: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', borderL: 'border-l-amber-400' },
+        red: { text: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200', borderL: 'border-l-red-400' },
+    };
+    const statusTextClasses = {
+        emerald: 'text-emerald-600',
+        amber: 'text-amber-600',
+        red: 'text-red-600',
+    };
+
     if (loading) return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -101,7 +114,7 @@ const UserDashboard = () => {
                 { label: 'Cancelled', value: cancelledCount, color: 'red' },
               ].map((stat, i) => (
                 <div key={i} className="bg-white rounded-xl border border-black/6 p-4">
-                  <p className={`text-2xl font-heading font-bold text-${stat.color}-500`}>{stat.value}</p>
+                  <p className={`text-2xl font-heading font-bold ${colorClasses[stat.color]?.text || 'text-gray-500'}`}>{stat.value}</p>
                   <p className="text-xs text-black/40 font-semibold uppercase tracking-wider mt-1">{stat.label}</p>
                 </div>
               ))}
@@ -155,7 +168,7 @@ const UserDashboard = () => {
                   return (
                     <div
                       key={booking._id}
-                      className={`bg-white rounded-2xl border border-black/10 overflow-hidden hover:shadow-lg transition-all duration-300 border-l-4 border-l-${config.color}-400`}
+                      className={`bg-white rounded-2xl border border-black/10 overflow-hidden hover:shadow-lg transition-all duration-300 border-l-4 ${colorClasses[config.color]?.borderL || 'border-l-gray-400'}`}
                     >
                       <div className="p-6">
                         {booking.eventId ? (
@@ -165,7 +178,7 @@ const UserDashboard = () => {
                                 {booking.eventId.title}
                               </h3>
                               <div className="flex flex-col gap-1 items-end shrink-0">
-                                <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider flex items-center gap-1 bg-${config.color}-50 text-${config.color}-600 border border-${config.color}-200`}>
+                                <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider flex items-center gap-1 ${colorClasses[config.color]?.bg || 'bg-gray-50'} ${statusTextClasses[config.color] || 'text-gray-600'} ${colorClasses[config.color]?.border || 'border-gray-200'} border`}>
                                   <StatusIcon size={10} />
                                   {booking.status}
                                 </span>

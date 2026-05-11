@@ -45,6 +45,9 @@ const AdminDashboard = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [stateFilters, setStateFilters] = useState({ paid: true, pending: true, refunded: true });
 
+  // BUG-12 FIX: Reset booking page when filters or search change
+  useEffect(() => { setBookingPage(1); }, [bookingSearch, stateFilters]);
+
   useEffect(() => { if (!user || user.role !== 'admin') { navigate('/login'); return; } fetchData(); }, [user, navigate]);
 
   const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
@@ -584,15 +587,21 @@ const AdminDashboard = () => {
                             >
                               {'< Prev'}
                             </button>
-                            {Array.from({ length: Math.min(bookingTotalPages, 3) }, (_, i) => i + 1).map(p => (
-                              <button
-                                key={p}
-                                onClick={() => setBookingPage(p)}
-                                className={`w-8 h-8 text-xs font-bold rounded-md transition-all ${bookingPage === p ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'border border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}
-                              >
-                                {String(p).padStart(2, '0')}
-                              </button>
-                            ))}
+                            {(() => {
+                              // BUG-11 FIX: Show pages around current page, not always 1-3
+                              let startPage = Math.max(1, bookingPage - 1);
+                              let endPage = Math.min(bookingTotalPages, startPage + 2);
+                              startPage = Math.max(1, endPage - 2);
+                              return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(p => (
+                                <button
+                                  key={p}
+                                  onClick={() => setBookingPage(p)}
+                                  className={`w-8 h-8 text-xs font-bold rounded-md transition-all ${bookingPage === p ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'border border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}
+                                >
+                                  {String(p).padStart(2, '0')}
+                                </button>
+                              ));
+                            })()}
                             {bookingTotalPages > 3 && <span className="text-gray-400 text-xs px-1">..</span>}
                             <button
                               disabled={bookingPage === bookingTotalPages || bookingTotalPages === 0}
@@ -681,9 +690,15 @@ const AdminDashboard = () => {
 
                             {/* Action Buttons */}
                             <div className="flex items-center gap-3 pt-2">
-                              <button className="flex-1 py-3 text-xs font-bold uppercase tracking-widest border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
-                                Edit_Rec
-                              </button>
+                              {/* BUG-14 FIX: Replaced non-functional Edit_Rec with working Confirm button */}
+                              {active.status === 'pending' && (
+                                <button
+                                  onClick={() => { handleConfirmBooking(active._id, active.paymentStatus); setSelectedBooking(null); }}
+                                  className="flex-1 py-3 text-xs font-bold uppercase tracking-widest border-2 border-emerald-500 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                                >
+                                  Confirm_Txn
+                                </button>
+                              )}
                               <button
                                 onClick={() => { handleCancelBooking(active._id); setSelectedBooking(null); }}
                                 className="flex-1 py-3 text-xs font-bold uppercase tracking-widest bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"

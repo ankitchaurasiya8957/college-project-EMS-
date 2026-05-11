@@ -1,4 +1,6 @@
 const Event = require('../models/Event');
+const Booking = require('../models/Booking');
+const Payment = require('../models/Payment');
 const asyncHandler = require('../utils/asyncHandler');
 const ErrorResponse = require('../utils/ErrorResponse');
 
@@ -64,13 +66,18 @@ exports.updateEvent = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Event not found', 404));
     }
 
-    Object.assign(event, req.body);
+    // BUG-7 FIX: Only allow whitelisted fields to prevent overwriting _id, createdBy, etc.
+    const allowedFields = ['title', 'description', 'date', 'location', 'category', 'totalSeats', 'ticketPrice', 'image'];
+    allowedFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+            event[field] = req.body[field];
+        }
+    });
 
     // If totalSeats is being updated, automatically recalculate availableSeats accurately
     if (req.body.totalSeats !== undefined) {
         const newTotalSeats = parseInt(req.body.totalSeats);
         if (!isNaN(newTotalSeats)) {
-            const Booking = require('../models/Booking');
             const bookedCount = await Booking.countDocuments({
                 eventId: event._id,
                 status: 'confirmed'
@@ -94,9 +101,23 @@ exports.updateEvent = asyncHandler(async (req, res, next) => {
  * Admin: Delete an event
  */
 exports.deleteEvent = asyncHandler(async (req, res, next) => {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const event = await Event.findById(req.params.id);
     if (!event) {
         return next(new ErrorResponse('Event not found', 404));
     }
+
+    // BUG-6 FIX: Cancel associated bookings and clean up payments before deleting
+    await Booking.updateMany(
+        { eventId: event._id, status: { $in: ['pending', 'confirmed'] } },
+        { status: 'cancelled' }
+    );
+    await Payment.updateMany(
+        { eventId: event._id, paymentStatus: 'created' },
+        { paymentStatus: 'failed' }
+    );
+
+    await Event.findByIdAndDelete(req.params.id);
+
+    console.log(`🗑️ Event deleted: "${event.title}" — associated bookings cancelled`);
     res.json({ success: true, message: 'Event deleted successfully' });
 });

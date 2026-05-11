@@ -30,7 +30,7 @@ const paymentSchema = new mongoose.Schema({
 
 // Index for fast lookup
 paymentSchema.index({ userId: 1, eventId: 1 });
-paymentSchema.index({ razorpayOrderId: 1 });
+// Note: razorpayOrderId index is already created by `unique: true` on the field definition
 paymentSchema.index({ transactionId: 1 });
 
 module.exports = mongoose.model('Payment', paymentSchema);

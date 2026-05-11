@@ -75,8 +75,13 @@ exports.confirmBooking = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Booking is already confirmed', 400));
     }
 
-    const event = await Event.findById(booking.eventId._id);
-    if (event.availableSeats <= 0) {
+    // BUG-1 FIX: Atomic seat decrement prevents race conditions
+    const updatedEvent = await Event.findOneAndUpdate(
+        { _id: booking.eventId._id, availableSeats: { $gt: 0 } },
+        { $inc: { availableSeats: -1 } },
+        { new: true }
+    );
+    if (!updatedEvent) {
         return next(new ErrorResponse('No seats available to confirm this booking', 400));
     }
 
@@ -85,9 +90,6 @@ exports.confirmBooking = asyncHandler(async (req, res, next) => {
         booking.paymentStatus = paymentStatus;
     }
     await booking.save();
-
-    event.availableSeats -= 1;
-    await event.save();
 
     // Send email on admin confirmation
     await sendBookingEmail(booking.userId.email, booking.userId.name, booking.eventId.title);
