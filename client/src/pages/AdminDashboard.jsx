@@ -703,7 +703,7 @@ const AdminDashboard = () => {
                                 onClick={() => { handleCancelBooking(active._id); setSelectedBooking(null); }}
                                 className="flex-1 py-3 text-xs font-bold uppercase tracking-widest bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
                               >
-                                Void_Txn
+                                Cancel
                               </button>
                             </div>
                           </div>
