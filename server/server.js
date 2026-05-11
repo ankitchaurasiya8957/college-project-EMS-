@@ -7,6 +7,11 @@ const errorHandler = require('./middleware/errorMiddleware');
 
 dotenv.config();
 
+// ── DNS Fix for MongoDB Atlas SRV resolution ──
+// Some ISPs/networks block SRV lookups; override with public DNS
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']);
+
 // ── App Setup ──
 const app = express();
 
