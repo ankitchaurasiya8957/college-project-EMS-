@@ -696,7 +696,7 @@ const AdminDashboard = () => {
                                   onClick={() => { handleConfirmBooking(active._id, active.paymentStatus); setSelectedBooking(null); }}
                                   className="flex-1 py-3 text-xs font-bold uppercase tracking-widest border-2 border-emerald-500 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
                                 >
-                                  Confirm_Txn
+                                  Confirm
                                 </button>
                               )}
                               <button
