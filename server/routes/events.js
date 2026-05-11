@@ -8,6 +8,9 @@ const validate = require('../middleware/validators');
 router.get('/', getEvents);
 router.get('/:id', getEventById);
 
+// ── Authenticated User Routes ──
+router.post('/user-create', protect, validate.createEvent, createEvent);
+
 // ── Admin Routes ──
 router.post('/', protect, admin, validate.createEvent, createEvent);
 router.put('/:id', protect, admin, validate.updateEvent, updateEvent);
