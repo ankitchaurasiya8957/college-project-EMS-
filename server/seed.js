@@ -271,8 +271,9 @@ const seedDatabase = async (providedMongoose) => {
         const createdEvents = await Event.insertMany(eventsWithAdmin);
         console.log(`🎉 Created ${createdEvents.length} events across 14 categories with Unsplash images.`);
 
-        // Generate Bookings Data
+        // Generate Bookings Data — spread across the last 12 months for chart analytics
         const bookingsData = [];
+        const now = new Date();
 
         for (const event of createdEvents) {
             // Assign 3-6 random users to each event
@@ -283,7 +284,7 @@ const seedDatabase = async (providedMongoose) => {
 
             for (const user of selectedUsers) {
                 // Randomize statuses
-                const statuses = ['pending', 'confirmed', 'cancelled'];
+                const statuses = ['pending', 'confirmed', 'confirmed', 'confirmed', 'cancelled'];
                 const status = statuses[Math.floor(Math.random() * statuses.length)];
 
                 let paymentStatus = 'not_paid';
@@ -295,6 +296,14 @@ const seedDatabase = async (providedMongoose) => {
                 }
                 const randomBookingId = `EVT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
+                // Generate a random bookedAt date spread across the current year (Jan–current month)
+                const currentMonth = now.getMonth(); // 0-11
+                const randomMonth = Math.floor(Math.random() * (currentMonth + 1)); // 0 to current month
+                const randomDay = Math.floor(Math.random() * 28) + 1; // 1-28 (safe for all months)
+                const bookedAt = new Date(now.getFullYear(), randomMonth, randomDay,
+                    Math.floor(Math.random() * 14) + 8, // 8 AM - 10 PM
+                    Math.floor(Math.random() * 60));
+
                 bookingsData.push({
                     userId: user._id,
                     eventId: event._id,
@@ -302,7 +311,10 @@ const seedDatabase = async (providedMongoose) => {
                     status: status,
                     paymentStatus: paymentStatus,
                     amount: event.ticketPrice,
-                    bookingType: 'booking'
+                    bookingType: 'booking',
+                    bookedAt: bookedAt,
+                    createdAt: bookedAt,
+                    updatedAt: bookedAt
                 });
 
                 // Deduct available seats specifically for confirmed tickets!

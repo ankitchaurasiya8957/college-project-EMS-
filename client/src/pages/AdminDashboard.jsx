@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import eventService from '../services/eventService';
 import bookingService from '../services/bookingService';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award, CreditCard, Eye, ArrowLeft, Ticket, User } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award, CreditCard, Eye, ArrowLeft, Ticket, User, Settings } from 'lucide-react';
 import { CategoryPieChart, MonthlyBarChart, RevenueLineChart } from '../components/DashboardCharts';
 import EditEventModal from '../components/EditEventModal';
 import { EVENT_CATEGORIES } from '../utils/categories';
@@ -250,7 +250,7 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="h-72"><RevenueLineChart bookings={bookings} /></div>
+                  <div className="h-72"><RevenueLineChart bookings={bookings} events={events} /></div>
                 </div>
 
                 {/* Monthly Event Frequency + Event Categories */}
