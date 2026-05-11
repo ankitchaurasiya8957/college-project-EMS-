@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Calendar, MapPin, Users, Filter, ChevronLeft, ChevronRight, SlidersHorizontal, LayoutGrid, List, ArrowUpDown, X, Ticket } from 'lucide-react';
 import eventService from '../services/eventService';
 import EventCard from '../components/EventCard';
-import { EVENT_CATEGORIES } from '../utils/categories';
+import { EVENT_CATEGORIES, getCategoryConfig } from '../utils/categories';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -307,12 +307,15 @@ const Events = () => {
                   <button onClick={() => setSearch('')} className="hover:text-blue-800"><X size={12} /></button>
                 </span>
               )}
-              {categoryFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full text-xs font-semibold">
-                  {categoryFilter}
-                  <button onClick={() => setCategoryFilter('all')} className="hover:text-purple-800"><X size={12} /></button>
-                </span>
-              )}
+              {categoryFilter !== 'all' && (() => {
+                const cc = getCategoryConfig(categoryFilter);
+                return (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold" style={{ backgroundColor: cc ? cc.bgColor : '#f3e8ff', color: cc ? cc.color : '#9333ea' }}>
+                    {cc ? cc.shortLabel : categoryFilter}
+                    <button onClick={() => setCategoryFilter('all')} className="hover:opacity-70 transition-opacity"><X size={12} /></button>
+                  </span>
+                );
+              })()}
               {statusFilter !== 'all' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-semibold capitalize">
                   {statusFilter}
@@ -383,7 +386,14 @@ const Events = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500">{event.category}</span>
+                              {(() => {
+                                const cc = getCategoryConfig(event.category);
+                                return (
+                                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: cc ? cc.color : '#3b82f6' }}>
+                                    {cc ? cc.shortLabel : event.category}
+                                  </span>
+                                );
+                              })()}
                               <h3 className="font-semibold text-gray-900 text-lg leading-tight mt-0.5 group-hover:text-blue-600 transition-colors">{event.title}</h3>
                             </div>
                             <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${isFree ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-700'}`}>

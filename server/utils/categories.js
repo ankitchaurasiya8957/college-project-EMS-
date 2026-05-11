@@ -1,22 +1,16 @@
 /**
- * Official Eventora Event Categories
+ * Official Eventora Event Categories (Consolidated)
+ * 7 categories that cover all event types.
  * This list is the single source of truth for all valid event categories.
  */
 const EVENT_CATEGORIES = [
-  'Business & Corporate',
-  'Educational & Professional',
-  'Entertainment',
-  'Cultural & Festival',
+  'Business & Networking',
+  'Education & Workshops',
+  'Entertainment & Culture',
   'Sports & Fitness',
-  'Technology & Gaming',
+  'Tech & Innovation',
   'Community & Social',
-  'Charity & Fundraising',
-  'Religious & Spiritual',
-  'Networking & Meetup',
-  'Promotional & Marketing',
-  'Lifestyle & Wellness',
-  'Public & Fan Engagement',
-  'Virtual & Hybrid'
+  'Lifestyle & Wellness'
 ];
 
 module.exports = EVENT_CATEGORIES;

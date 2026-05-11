@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, CheckCircle, XCircle, Calendar, Users, IndianRupee, Clock, Sparkles, Search, Edit3, MapPin, ChevronLeft, ChevronRight, Filter, BarChart3, TrendingUp, Award, CreditCard, Eye, ArrowLeft, Ticket, User, Settings } from 'lucide-react';
 import { CategoryPieChart, MonthlyBarChart, RevenueLineChart } from '../components/DashboardCharts';
 import EditEventModal from '../components/EditEventModal';
-import { EVENT_CATEGORIES } from '../utils/categories';
+import { EVENT_CATEGORIES, getCategoryConfig } from '../utils/categories';
 import './AdminDashboard.css';
 
 const ITEMS_PER_PAGE = 8;
@@ -349,7 +349,7 @@ const AdminDashboard = () => {
                   </select>
                   <select className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 outline-none focus:border-blue-500" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
                     <option value="all">All Categories</option>
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    {EVENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.shortLabel}</option>)}
                   </select>
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -376,7 +376,7 @@ const AdminDashboard = () => {
                               <td className="px-6 py-4 font-semibold text-gray-900">{event.title}</td>
                               <td className="px-6 py-4 text-sm text-gray-600">{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                               <td className="px-6 py-4"><span className="flex items-center gap-1.5 text-sm text-gray-600"><MapPin size={14} className="text-gray-400"/>{event.location}</span></td>
-                              <td className="px-6 py-4"><span className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 text-[10px] font-bold uppercase tracking-wider">{event.category}</span></td>
+                              <td className="px-6 py-4">{(() => { const cc = getCategoryConfig(event.category); return <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: cc ? cc.bgColor : '#f3f4f6', color: cc ? cc.color : '#6b7280' }}>{cc ? cc.shortLabel : event.category}</span>; })()}</td>
                               <td className="px-6 py-4"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-max ${status === 'upcoming' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}><div className={`w-1.5 h-1.5 rounded-full ${status === 'upcoming' ? 'bg-emerald-500' : 'bg-gray-400'}`}></div>{status}</span></td>
                               <td className="px-6 py-4 text-sm"><span className={event.availableSeats > 0 ? 'text-emerald-600 font-semibold' : 'text-red-500 font-semibold'}>{event.availableSeats}</span><span className="text-gray-400">/{event.totalSeats}</span></td>
                               <td className="px-6 py-4">

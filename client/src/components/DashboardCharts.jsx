@@ -1,7 +1,9 @@
 import React from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { getCategoryConfig } from '../utils/categories';
 
-const COLORS = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#f43f5e','#06b6d4','#ec4899','#14b8a6'];
+// Fallback colors if a category isn't found in the config
+const FALLBACK_COLORS = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#f43f5e','#06b6d4','#ec4899'];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -34,17 +36,31 @@ const SimpleTooltip = ({ active, payload, label }) => {
 export function CategoryPieChart({ events }) {
   const data = Object.entries(events.reduce((acc, e) => {
     acc[e.category] = (acc[e.category] || 0) + 1; return acc;
-  }, {})).map(([name, value]) => ({ name, value }));
+  }, {})).map(([name, value]) => ({
+    name,
+    value,
+    color: getCategoryConfig(name)?.color || null
+  }));
 
   if (!data.length) return <p style={{ color: 'rgba(0,0,0,0.3)', fontSize: 14, textAlign: 'center', paddingTop: 40 }}>No data</p>;
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="value" paddingAngle={3} stroke="none">
-          {data.map((_, i) => <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />)}
+          {data.map((entry, i) => (
+            <Cell key={`cell-${i}`} fill={entry.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length]} />
+          ))}
         </Pie>
         <Tooltip content={<SimpleTooltip />} />
-        <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, fontWeight: 600 }} />
+        <Legend
+          iconType="circle"
+          iconSize={8}
+          wrapperStyle={{ fontSize: 11, fontWeight: 600 }}
+          formatter={(value, entry) => {
+            const config = getCategoryConfig(value);
+            return <span style={{ color: config?.color || '#666' }}>{config?.shortLabel || value}</span>;
+          }}
+        />
       </PieChart>
     </ResponsiveContainer>
   );

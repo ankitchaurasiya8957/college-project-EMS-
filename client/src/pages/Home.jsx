@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft, Share2, Copy, Briefcase, GraduationCap, Music, Palette, Trophy, Gamepad2, Heart, Flame, Handshake, Megaphone, Leaf, Star, Monitor, ChevronRight } from 'lucide-react';
+import { ArrowRight, Calendar, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft, Share2, Copy, Briefcase, GraduationCap, Music, Trophy, Heart, Leaf, Monitor, ChevronRight } from 'lucide-react';
 import eventService from '../services/eventService';
 import { EVENT_CATEGORIES, getCategoryConfig } from '../utils/categories';
 
@@ -318,9 +318,9 @@ const Home = () => {
                 </div>
 
                 {/* Category Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                   {EVENT_CATEGORIES.map((cat, i) => {
-                    const iconMap = { Briefcase, GraduationCap, Music, Palette, Trophy, Gamepad2, Users, Heart, Flame, Handshake, Megaphone, Leaf, Star, Monitor };
+                    const iconMap = { Briefcase, GraduationCap, Music, Trophy, Monitor, Heart, Leaf };
                     const IconComponent = iconMap[cat.icon] || Calendar;
                     const eventCount = events.filter(e => e.category === cat.value).length;
                     return (

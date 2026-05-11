@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import bookingService from '../services/bookingService';
 import { Link, useNavigate } from 'react-router-dom';
 import { Ticket, XCircle, Calendar, ArrowRight, ExternalLink, CreditCard, Copy, IndianRupee, MapPin, CheckCircle, Clock, Ban } from 'lucide-react';
+import { getCategoryConfig } from '../utils/categories';
 
 const UserDashboard = () => {
     const { user } = useContext(AuthContext);
@@ -174,9 +175,19 @@ const UserDashboard = () => {
                         {booking.eventId ? (
                           <>
                             <div className="flex items-start justify-between gap-3 mb-4">
-                              <h3 className="font-heading font-semibold text-lg text-dark leading-tight">
-                                {booking.eventId.title}
-                              </h3>
+                              <div className="flex flex-col gap-2">
+                                <h3 className="font-heading font-semibold text-lg text-dark leading-tight">
+                                  {booking.eventId.title}
+                                </h3>
+                                {booking.eventId.category && (() => {
+                                  const cc = getCategoryConfig(booking.eventId.category);
+                                  return (
+                                    <span className="w-max px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: cc ? cc.bgColor : '#f3f4f6', color: cc ? cc.color : '#6b7280' }}>
+                                      {cc ? cc.shortLabel : booking.eventId.category}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                               <div className="flex flex-col gap-1 items-end shrink-0">
                                 <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider flex items-center gap-1 ${colorClasses[config.color]?.bg || 'bg-gray-50'} ${statusTextClasses[config.color] || 'text-gray-600'} ${colorClasses[config.color]?.border || 'border-gray-200'} border`}>
                                   <StatusIcon size={10} />
