@@ -205,19 +205,19 @@ const AdminDashboard = () => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-1">Dashboard</h1>
                 <p className="text-sm text-gray-500">Manage events, track analytics, and handle bookings across your organization.</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                 <div className="relative">
                   <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="text" placeholder="Search events..." className="pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none w-56" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  <input type="text" placeholder="Search events..." className="pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none w-full sm:w-56" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                 </div>
-                <button onClick={() => setShowEventForm(true)} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-blue-500/25 hover:bg-blue-700 transition-colors">
+                <button onClick={() => setShowEventForm(true)} className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-full text-xs font-bold uppercase tracking-wider shadow-lg shadow-blue-500/25 hover:bg-blue-700 transition-colors">
                   <Plus size={14} /> Create Event
                 </button>
               </div>
             </div>
 
             {/* Sub Tabs */}
-            <div className="flex items-center gap-8 border-b border-gray-200 mb-8">
+            <div className="flex items-center gap-4 sm:gap-8 border-b border-gray-200 mb-8 overflow-x-auto">
               <button onClick={() => setActiveTab('overview')} className={`pb-4 text-sm font-bold flex items-center gap-2 transition-colors relative ${activeTab === 'overview' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-800'}`}>
                 <TrendingUp size={16}/> Overview
                 {activeTab === 'overview' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
@@ -348,7 +348,8 @@ const AdminDashboard = () => {
                     {EVENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.shortLabel}</option>)}
                   </select>
                 </div>
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* Desktop Table */}
+                <div className="desktop-table bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
@@ -398,6 +399,48 @@ const AdminDashboard = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Mobile Cards */}
+                <div className="mobile-cards space-y-4">
+                  {paginatedEvents.length === 0 ? (
+                    <div className="bg-white rounded-2xl p-12 text-center text-gray-400 text-sm border border-gray-100">No events found.</div>
+                  ) : paginatedEvents.map(event => {
+                    const status = getEventStatus(event.date);
+                    const cc = getCategoryConfig(event.category);
+                    return (
+                      <div key={event._id} className="mobile-event-card">
+                        <div className="card-header">
+                          <h3 className="card-title">{event.title}</h3>
+                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shrink-0" style={{ backgroundColor: cc ? cc.bgColor : '#f3f4f6', color: cc ? cc.color : '#6b7280' }}>{cc ? cc.shortLabel : event.category}</span>
+                        </div>
+                        <div className="card-meta">
+                          <span><Calendar size={12}/> {new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          <span><MapPin size={12}/> {event.location}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${status === 'upcoming' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}><div className={`w-1.5 h-1.5 rounded-full ${status === 'upcoming' ? 'bg-emerald-500' : 'bg-gray-400'}`}/>{status}</span>
+                          <span className="text-sm"><span className={event.availableSeats > 0 ? 'text-emerald-600 font-semibold' : 'text-red-500 font-semibold'}>{event.availableSeats}</span><span className="text-gray-400"> / {event.totalSeats} seats</span></span>
+                        </div>
+                        <div className="card-footer">
+                          <div className="flex items-center gap-2">
+                            <button className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center" onClick={() => handleViewParticipants(event._id)}><Eye size={14} /></button>
+                            <button className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center" onClick={() => setEditEvent(event)}><Edit3 size={14} /></button>
+                            <button className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center" onClick={() => handleDeleteEvent(event._id)}><Trash2 size={14} /></button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between py-4">
+                      <p className="text-xs font-medium text-gray-500">Showing {(currentPage-1)*ITEMS_PER_PAGE+1}–{Math.min(currentPage*ITEMS_PER_PAGE, filteredEvents.length)} of {filteredEvents.length}</p>
+                      <div className="flex gap-1">
+                        <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 disabled:opacity-50" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p-1)}><ChevronLeft size={14} /></button>
+                        <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 disabled:opacity-50" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p+1)}><ChevronRight size={14} /></button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -438,32 +481,32 @@ const AdminDashboard = () => {
               return (
                 <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
                   {/* Header Bar */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+                    <div className="flex items-center gap-4 flex-wrap">
                       <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wider">Data_Transactions</h2>
                       <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-md uppercase tracking-widest animate-pulse">Live_Stream_Active</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="relative flex-1 sm:flex-none">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                           type="text"
-                          placeholder="Query_ID..."
+                          placeholder="Query ID or Event..."
                           value={bookingSearch}
                           onChange={(e) => setBookingSearch(e.target.value)}
-                          className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-medium w-48 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                          className="pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium w-full sm:w-48 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                         />
                       </div>
-                      <button className="w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">
+                      <button className="w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors shrink-0">
                         <Settings size={14} />
                       </button>
                     </div>
                   </div>
 
                   {/* 3-Panel Layout */}
-                  <div className="grid grid-cols-12 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                     {/* Left Sidebar - Metrics & Filters */}
-                    <div className="col-span-3 space-y-4">
+                    <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-1 gap-4">
                       {/* Metric 1: Volume */}
                       <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Sys_Metric_01 // Vol</p>
@@ -488,8 +531,8 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Metric 3: Queue Status */}
-                      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                      {/* Metric 3: Queue Status — hidden on mobile */}
+                      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hidden md:block">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Queue_Status // Alert</p>
                         <div className="flex items-end justify-between">
                           <p className="text-3xl font-bold text-gray-900">{pendingExecCount}</p>
@@ -497,8 +540,8 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Query Parameters / Filters */}
-                      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                      {/* Query Parameters / Filters — hidden on mobile */}
+                      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hidden md:block">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Query_Parameters</p>
                         <div className="space-y-3">
                           {[
@@ -521,18 +564,18 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Center - Transactions Table */}
-                    <div className="col-span-5 flex flex-col">
+                    <div className="md:col-span-5 flex flex-col">
                       <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex-1 flex flex-col overflow-hidden">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/80">
+                        {/* Table Header - hidden on mobile */}
+                        <div className="hidden md:grid grid-cols-12 gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/80">
                           <div className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Transaction_ID</div>
                           <div className="col-span-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Node_Target</div>
                           <div className="col-span-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Entity_Ref</div>
                           <div className="col-span-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Time</div>
                         </div>
 
-                        {/* Table Rows */}
-                        <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+                        {/* Table Rows - Desktop */}
+                        <div className="hidden md:block flex-1 overflow-y-auto divide-y divide-gray-50">
                           {paginatedBookings.length === 0 ? (
                             <div className="p-12 text-center text-gray-400 text-xs font-medium">No transactions match current query parameters.</div>
                           ) : paginatedBookings.map((booking) => {
@@ -564,6 +607,39 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="col-span-2">
                                   <p className="text-[10px] text-gray-400 font-medium">{new Date(booking.bookedAt).getFullYear()}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Mobile Transaction Cards */}
+                        <div className="md:hidden divide-y divide-gray-100">
+                          {paginatedBookings.length === 0 ? (
+                            <div className="p-12 text-center text-gray-400 text-xs font-medium">No transactions match current query parameters.</div>
+                          ) : paginatedBookings.map((booking) => {
+                            const isActive = active?._id === booking._id;
+                            return (
+                              <div
+                                key={booking._id}
+                                onClick={() => setSelectedBooking(booking)}
+                                className={`px-4 py-4 cursor-pointer transition-all ${isActive ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50/50 border-l-4 border-l-transparent'}`}
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <p className={`text-sm font-bold ${isActive ? 'text-blue-600' : 'text-red-500'}`}>
+                                    TXN-{(booking.bookingId || booking._id).slice(-4).toUpperCase()}
+                                  </p>
+                                  <p className="text-[10px] text-gray-400 font-medium">{new Date(booking.bookedAt).getFullYear()}</p>
+                                </div>
+                                <p className="text-xs font-semibold text-gray-900 mb-0.5">{booking.eventId?.title || 'Deleted_Event'}</p>
+                                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-2">Type: {booking.paymentStatus === 'paid' ? 'TIER_1_ACCESS' : 'BASE_ACCESS'}</p>
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[9px] font-bold text-white shrink-0 ${
+                                    booking.paymentStatus === 'paid' ? 'bg-blue-500' : booking.status === 'cancelled' ? 'bg-red-500' : 'bg-amber-500'
+                                  }`}>
+                                    {(booking.userId?.name || 'U').substring(0, 2).toUpperCase()}
+                                  </div>
+                                  <span className="text-xs font-semibold text-gray-700">USR_{(booking.userId?.name || 'Unknown').split(' ').pop().toUpperCase().substring(0, 8)}_{(booking.userId?.name || 'U')[0].toUpperCase()}</span>
                                 </div>
                               </div>
                             );
@@ -612,7 +688,7 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Right Panel - Inspector View */}
-                    <div className="col-span-4">
+                    <div className="md:col-span-4">
                       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         {/* Inspector Header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
