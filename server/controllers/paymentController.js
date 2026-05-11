@@ -6,9 +6,14 @@ const Event = require('../models/Event');
 const { sendBookingEmail } = require('../utils/email');
 
 // ── Razorpay Instance ──
+const rzpKeyId = (process.env.RAZORPAY_KEY_ID || '').trim();
+const rzpKeySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+
+console.log(`💳 Razorpay initialized: key=${rzpKeyId.substring(0, 12)}...`);
+
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
+    key_id: rzpKeyId,
+    key_secret: rzpKeySecret,
 });
 
 /**
@@ -121,7 +126,7 @@ exports.createOrder = async (req, res) => {
             orderId: razorpayOrder.id,
             amount: amountInPaise,
             currency: 'INR',
-            keyId: process.env.RAZORPAY_KEY_ID,
+            keyId: rzpKeyId,
             transactionId,
             eventTitle: event.title,
             userName: req.user.name,
@@ -187,12 +192,13 @@ exports.verifyPayment = async (req, res) => {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingType = 'booking' } = req.body;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            console.error('❌ Missing payment verification data:', req.body);
             return res.status(400).json({ message: 'Missing payment verification data' });
         }
 
         // ── Verify Signature using HMAC SHA256 ──
         const generatedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .createHmac('sha256', rzpKeySecret)
             .update(`${razorpay_order_id}|${razorpay_payment_id}`)
             .digest('hex');
 
@@ -202,7 +208,9 @@ exports.verifyPayment = async (req, res) => {
                 { razorpayOrderId: razorpay_order_id },
                 { paymentStatus: 'failed' }
             );
-            console.warn('⚠️  Payment signature mismatch:', razorpay_order_id);
+            console.error(`⚠️  Payment signature mismatch! Order: ${razorpay_order_id}`);
+            console.error(`   Expected: ${generatedSignature}`);
+            console.error(`   Received: ${razorpay_signature}`);
             return res.status(400).json({ message: 'Payment verification failed — invalid signature' });
         }
 

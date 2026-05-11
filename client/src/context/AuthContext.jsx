@@ -106,9 +106,13 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const updateProfile = async (name) => {
+    const updateProfile = async (name, profilePhoto) => {
         try {
-            const { data } = await api.put('/auth/profile', { name });
+            const payload = { name };
+            if (profilePhoto !== undefined) {
+                payload.profilePhoto = profilePhoto;
+            }
+            const { data } = await api.put('/auth/profile', payload);
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             localStorage.setItem('token', data.token);

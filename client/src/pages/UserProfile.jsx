@@ -1,13 +1,16 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Shield, Lock, Info, ArrowRight, Edit2, ArrowLeft } from 'lucide-react';
+import { Shield, Lock, Info, ArrowRight, Edit2, ArrowLeft, Camera, Trash2, Loader2, CheckCircle } from 'lucide-react';
 
 const UserProfile = () => {
   const { user, updateProfile } = useContext(AuthContext);
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   
   const [name, setName] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(null);     // Current photo data URL
+  const [newPhoto, setNewPhoto] = useState(undefined);         // undefined = no change, null = remove, string = new photo
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -17,8 +20,48 @@ const UserProfile = () => {
       navigate('/login');
     } else {
       setName(user.name);
+      setProfilePhoto(user.profilePhoto || null);
     }
   }, [user, navigate]);
+
+  // Handle file selection
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file (JPEG, PNG, etc.)');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image size must be less than 2MB');
+      return;
+    }
+
+    setError('');
+
+    // Convert to base64 data URL
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      setProfilePhoto(dataUrl);
+      setNewPhoto(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove photo
+  const handleRemovePhoto = () => {
+    setProfilePhoto(null);
+    setNewPhoto(null);  // null signals "remove photo"
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Check if anything changed
+  const hasChanges = name !== (user?.name || '') || newPhoto !== undefined;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +70,8 @@ const UserProfile = () => {
     setError('');
 
     try {
-      await updateProfile(name);
+      await updateProfile(name, newPhoto);
+      setNewPhoto(undefined);  // Reset "changed" state
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
@@ -38,12 +82,19 @@ const UserProfile = () => {
   };
 
   const handleDiscard = () => {
-    if (user) setName(user.name);
+    if (user) {
+      setName(user.name);
+      setProfilePhoto(user.profilePhoto || null);
+      setNewPhoto(undefined);
+    }
     setMessage('');
     setError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   if (!user) return null;
+
+  const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pt-28 pb-12 px-6 font-sans">
@@ -64,14 +115,74 @@ const UserProfile = () => {
             
             {/* Left Column: Avatar & Info */}
             <div className="md:col-span-4 flex flex-col items-start">
-              <div className="relative mb-6">
-                <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-emerald-500/20">
-                  {user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+              <div className="relative mb-6 group">
+                {/* Avatar Display */}
+                <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-lg shadow-emerald-500/20 relative">
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white text-4xl font-bold">
+                      {initials}
+                    </div>
+                  )}
+
+                  {/* Hover overlay */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center cursor-pointer rounded-2xl"
+                  >
+                    <Camera size={24} className="text-white" />
+                  </div>
                 </div>
-                <button className="absolute -bottom-3 -right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-black/5 text-black/60 hover:text-dark transition-all">
+
+                {/* Edit button */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-3 -right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-black/5 text-black/60 hover:text-blue-500 hover:border-blue-200 transition-all cursor-pointer"
+                  title="Change profile photo"
+                >
                   <Edit2 size={16} />
                 </button>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                />
               </div>
+
+              {/* Photo action buttons */}
+              <div className="flex items-center gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1"
+                >
+                  <Camera size={12} />
+                  {profilePhoto ? 'Change Photo' : 'Upload Photo'}
+                </button>
+                {profilePhoto && (
+                  <>
+                    <span className="text-black/10">|</span>
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
+                    >
+                      <Trash2 size={12} />
+                      Remove
+                    </button>
+                  </>
+                )}
+              </div>
+              <p className="text-[10px] text-black/30 mb-4">JPEG, PNG or WebP • Max 2MB</p>
               
               <h1 className="text-2xl font-semibold text-gray-900 mb-2 tracking-tight">{user.name}</h1>
               
@@ -95,7 +206,8 @@ const UserProfile = () => {
               </div>
 
               {message && (
-                <div className="bg-emerald-50 text-emerald-600 p-4 rounded-xl mb-6 text-sm font-medium border border-emerald-100">
+                <div className="bg-emerald-50 text-emerald-600 p-4 rounded-xl mb-6 text-sm font-medium border border-emerald-100 flex items-center gap-2">
+                  <CheckCircle size={16} />
                   {message}
                 </div>
               )}
@@ -153,15 +265,18 @@ const UserProfile = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={loading || name === user.name}
+                    disabled={loading || !hasChanges}
                     className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all shadow-lg ${
-                      loading || name === user.name
+                      loading || !hasChanges
                         ? 'bg-gray-100 text-gray-400 shadow-none cursor-not-allowed'
                         : 'bg-gradient-to-r from-blue-500 to-emerald-400 text-white hover:opacity-90 shadow-emerald-500/25'
                     }`}
                   >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                    {!loading && <ArrowRight size={16} />}
+                    {loading ? (
+                      <><Loader2 size={16} className="animate-spin" /> Saving...</>
+                    ) : (
+                      <>Save Changes <ArrowRight size={16} /></>
+                    )}
                   </button>
                 </div>
               </form>

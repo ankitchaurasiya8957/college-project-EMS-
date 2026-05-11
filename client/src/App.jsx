@@ -15,6 +15,7 @@ import PaymentFailed from './pages/PaymentFailed';
 import Contact from './pages/Contact';
 import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
     return (
@@ -23,18 +24,18 @@ function App() {
                 <Navbar />
                 <main className="flex-1">
                     <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/events" element={<Events />} />
-                        <Route path="/events/:id" element={<EventDetail />} />
+                        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                        <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+                        <Route path="/events/:id" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/dashboard" element={<UserDashboard />} />
-                        <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="/profile" element={<UserProfile />} />
-                        <Route path="/contact" element={<Contact />} />
-                        <Route path="/payment-success" element={<PaymentSuccess />} />
-                        <Route path="/payment-failed" element={<PaymentFailed />} />
+                        <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+                        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                        <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                        <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
+                        <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+                        <Route path="/payment-failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </main>

@@ -13,8 +13,15 @@ const Register = () => {
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { register, verifyOTP, resendOTP } = useContext(AuthContext);
+    const { user, register, verifyOTP, resendOTP } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        if (user) {
+            if (user.role === 'admin') navigate('/admin');
+            else navigate('/dashboard');
+        }
+    }, [user, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
