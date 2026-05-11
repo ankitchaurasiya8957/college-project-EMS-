@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import bookingService from '../services/bookingService';
+import eventService from '../services/eventService';
 import { Link, useNavigate } from 'react-router-dom';
-import { Ticket, XCircle, Calendar, ArrowRight, ExternalLink, CreditCard, Copy, IndianRupee, MapPin, CheckCircle, Clock, Ban } from 'lucide-react';
-import { getCategoryConfig } from '../utils/categories';
+import { Ticket, XCircle, Calendar, ArrowRight, ExternalLink, CreditCard, Copy, IndianRupee, MapPin, CheckCircle, Clock, Ban, Plus, X, Save, Image } from 'lucide-react';
+import { getCategoryConfig, EVENT_CATEGORIES } from '../utils/categories';
 
 const UserDashboard = () => {
     const { user } = useContext(AuthContext);
@@ -12,6 +13,12 @@ const UserDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
     const [toast, setToast] = useState(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [creating, setCreating] = useState(false);
+    const [eventForm, setEventForm] = useState({
+        title: '', description: '', date: '', location: '', category: '',
+        totalSeats: '', ticketPrice: '', image: ''
+    });
 
     useEffect(() => {
         if (!user) {
@@ -54,6 +61,23 @@ const UserDashboard = () => {
         showToast('Copied to clipboard!');
     };
 
+    const handleCreateEvent = async (e) => {
+        e.preventDefault();
+        setCreating(true);
+        try {
+            await eventService.userCreate(eventForm);
+            showToast('Event created successfully! 🎉');
+            setShowCreateModal(false);
+            setEventForm({ title: '', description: '', date: '', location: '', category: '', totalSeats: '', ticketPrice: '', image: '' });
+        } catch (error) {
+            showToast(error.response?.data?.message || 'Error creating event', 'error');
+        } finally {
+            setCreating(false);
+        }
+    };
+
+    const setField = (key, val) => setEventForm(f => ({ ...f, [key]: val }));
+
     const filteredBookings = filter === 'all'
         ? bookings
         : bookings.filter(b => b.status === filter);
@@ -81,6 +105,8 @@ const UserDashboard = () => {
         red: 'text-red-600',
     };
 
+    const inputCls = "w-full px-4 py-3 rounded-xl border border-black/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50/50";
+
     if (loading) return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="inline-block w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -95,7 +121,7 @@ const UserDashboard = () => {
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-heading font-bold uppercase shrink-0">
                 {user?.name.charAt(0)}
               </div>
-              <div className="text-center sm:text-left">
+              <div className="text-center sm:text-left flex-1">
                 <h1 className="font-heading text-3xl md:text-4xl font-semibold text-dark tracking-tight mt-2">
                   Welcome, {user?.name}
                 </h1>
@@ -104,6 +130,13 @@ const UserDashboard = () => {
                   User Dashboard
                 </p>
               </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
+              >
+                <Plus size={18} />
+                Create Event
+              </button>
             </div>
 
             {/* Stats Cards */}
@@ -287,6 +320,82 @@ const UserDashboard = () => {
               </div>
             )}
           </section>
+
+          {/* Create Event Modal */}
+          {showCreateModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowCreateModal(false)}>
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                {/* Modal Header */}
+                <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-black/5">
+                  <div>
+                    <h2 className="font-heading text-xl font-semibold text-dark flex items-center gap-2">
+                      <Plus size={20} className="text-primary" />
+                      Create New Event
+                    </h2>
+                    <p className="text-xs text-black/40 mt-1">Fill in the details to publish your event</p>
+                  </div>
+                  <button onClick={() => setShowCreateModal(false)} className="w-8 h-8 rounded-lg bg-black/5 flex items-center justify-center hover:bg-black/10 transition">
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Modal Form */}
+                <form onSubmit={handleCreateEvent} className="p-6 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Event Title *</label>
+                      <input required className={inputCls} placeholder="e.g. Tech Innovation Summit" value={eventForm.title} onChange={e => setField('title', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Category *</label>
+                      <select required className={inputCls} value={eventForm.category} onChange={e => setField('category', e.target.value)}>
+                        <option value="">Select Category</option>
+                        {EVENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Date *</label>
+                      <input required type="date" className={inputCls} value={eventForm.date} onChange={e => setField('date', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Location *</label>
+                      <input required className={inputCls} placeholder="e.g. Convention Center, Mumbai" value={eventForm.location} onChange={e => setField('location', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Total Seats *</label>
+                      <input required type="number" min="1" className={inputCls} placeholder="e.g. 200" value={eventForm.totalSeats} onChange={e => setField('totalSeats', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Ticket Price (₹)</label>
+                      <input type="number" min="0" className={inputCls} placeholder="0 for free events" value={eventForm.ticketPrice} onChange={e => setField('ticketPrice', e.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Image URL</label>
+                    <div className="relative">
+                      <Image size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" />
+                      <input className={`${inputCls} pl-10`} placeholder="https://images.unsplash.com/..." value={eventForm.image} onChange={e => setField('image', e.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-black/50 uppercase tracking-wider block mb-1.5">Description *</label>
+                    <textarea required className={`${inputCls} resize-none h-24`} placeholder="Describe your event..." value={eventForm.description} onChange={e => setField('description', e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button type="submit" disabled={creating}
+                      className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-medium text-sm hover:bg-primary/90 transition-all disabled:opacity-50 shadow-lg shadow-primary/20">
+                      <Save size={15} /> {creating ? 'Publishing...' : 'Publish Event'}
+                    </button>
+                    <button type="button" onClick={() => setShowCreateModal(false)}
+                      className="px-6 py-3 rounded-xl border border-black/10 text-sm font-medium hover:bg-black/5 transition">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* Toast */}
           {toast && (

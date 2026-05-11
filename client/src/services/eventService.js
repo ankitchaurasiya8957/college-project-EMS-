@@ -41,6 +41,19 @@ const eventService = {
     },
 
     /**
+     * Create a new event as a regular user (JWT required).
+     */
+    userCreate: async (eventData) => {
+        const payload = {
+            ...eventData,
+            totalSeats: Number(eventData.totalSeats),
+            ticketPrice: Number(eventData.ticketPrice) || 0,
+        };
+        const { data } = await api.post('/events/user-create', payload);
+        return data;
+    },
+
+    /**
      * Update an existing event by its _id (admin-only, JWT required).
      */
     update: async (id, eventData) => {
