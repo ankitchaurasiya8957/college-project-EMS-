@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft, Share2, Copy, Briefcase, GraduationCap, Music, Trophy, Heart, Leaf, Monitor, ChevronRight } from 'lucide-react';
+import { ArrowRight, Calendar, Users, Clock, Ticket, ShieldCheck, Sparkles, Quote, ArrowLeft, Briefcase, GraduationCap, Music, Trophy, Heart, Leaf, Monitor, ChevronRight } from 'lucide-react';
 import eventService from '../services/eventService';
 import { EVENT_CATEGORIES, getCategoryConfig } from '../utils/categories';
 
@@ -442,6 +442,8 @@ const Home = () => {
                       image: '/team/tauheed.png',
                       desc: 'Architecting seamless workflows and driving strategic growth for premium event executions worldwide.',
                       showSocial: true,
+                      instagram: 'https://www.instagram.com/absolute_tauheed',
+                      linkedin: 'https://www.linkedin.com/in/mohd-tauheed-ansari',
                     },
                     {
                       name: 'ARPIT PANDEY',
@@ -449,7 +451,9 @@ const Home = () => {
                       roleColor: 'text-emerald-600',
                       image: '/team/arpit.png',
                       desc: 'Defining the visual language and experiential design for unforgettable, immersive events.',
-                      showSocial: false,
+                      showSocial: true,
+                      instagram: 'https://www.instagram.com/arpit_pandey_0454?igsh=bXdmazF6dGgzaDc0',
+                      linkedin: 'https://www.linkedin.com/in/arpit-pandey0454',
                     },
                     {
                       name: 'ANKIT CHAURASIYA',
@@ -457,7 +461,9 @@ const Home = () => {
                       roleColor: 'text-purple-600',
                       image: '/team/ankit.png',
                       desc: 'Ensuring flawless execution and precise coordination across global venue locations.',
-                      showSocial: false,
+                      showSocial: true,
+                      instagram: 'https://www.instagram.com/mr.ankit84ya',
+                      linkedin: 'https://www.linkedin.com/in/ankit-chaurasiya',
                     },
                   ].map((member, i) => (
                     <div
@@ -487,12 +493,12 @@ const Home = () => {
                       {/* Social Icons (only on first card as shown in image) */}
                       {member.showSocial && (
                         <div className="flex items-center justify-center gap-3 mt-6">
-                          <button className="w-9 h-9 rounded-full border border-black/10 flex items-center justify-center text-black/40 hover:text-primary hover:border-primary/30 transition-colors">
-                            <Share2 size={14} />
-                          </button>
-                          <button className="w-9 h-9 rounded-full border border-black/10 flex items-center justify-center text-black/40 hover:text-primary hover:border-primary/30 transition-colors">
-                            <Copy size={14} />
-                          </button>
+                          <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full border border-black/10 flex items-center justify-center text-black/40 hover:text-pink-500 hover:border-pink-500/30 transition-colors">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                          </a>
+                          <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full border border-black/10 flex items-center justify-center text-black/40 hover:text-[#0A66C2] hover:border-[#0A66C2]/30 transition-colors">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                          </a>
                         </div>
                       )}
                     </div>
